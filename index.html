@@ -311,6 +311,178 @@
                 opacity: 1;
             }
         }
+
+        /* MOBILE RESPONSIVE STYLES */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px 12px;
+            margin-right: 10px;
+        }
+
+        .mobile-panel-overlay {
+            display: none;
+            position: fixed;
+            top: 60px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 99;
+        }
+
+        .mobile-panel-overlay.show {
+            display: block;
+        }
+
+        /* Tablets (max-width: 1024px) */
+        @media (max-width: 1024px) {
+            .panel-left,
+            .panel-right {
+                width: 250px;
+            }
+        }
+
+        /* Mobile devices (max-width: 768px) */
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .navbar-menu {
+                display: none !important;
+            }
+
+            .container-main {
+                height: calc(100vh - 60px);
+            }
+
+            .panel-left {
+                position: fixed;
+                left: 0;
+                top: 60px;
+                bottom: 0;
+                width: 280px;
+                height: calc(100vh - 60px);
+                z-index: 200;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                border-right: 2px solid #ddd;
+                box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .panel-left.mobile-open {
+                transform: translateX(0);
+            }
+
+            .panel-right {
+                position: fixed;
+                right: 0;
+                top: 60px;
+                bottom: 0;
+                width: 280px;
+                height: calc(100vh - 60px);
+                z-index: 200;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                border-left: 2px solid #ddd;
+                box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .panel-right.mobile-open {
+                transform: translateX(0);
+            }
+
+            #map {
+                width: 100%;
+                height: 100%;
+            }
+        }
+
+        /* Small phones (max-width: 480px) */
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 16px;
+                padding: 10px 10px;
+            }
+
+            .panel-left,
+            .panel-right {
+                width: 100%;
+                transform: translateX(-100%);
+            }
+
+            .panel-left.mobile-open,
+            .panel-right.mobile-open {
+                transform: translateX(0);
+            }
+
+            .panel-left h3,
+            .panel-right h3 {
+                font-size: 13px;
+            }
+
+            .layer-item {
+                font-size: 12px;
+            }
+
+            .layer-priority-item {
+                font-size: 12px;
+            }
+
+            .priority-btn {
+                padding: 2px 4px;
+                font-size: 10px;
+            }
+
+            .panel-tabs {
+                margin-bottom: 10px;
+            }
+
+            .panel-tab-btn {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 20px;
+            }
+
+            .close-btn {
+                font-size: 24px;
+            }
+        }
+
+        /* Extra small phones (max-width: 320px) */
+        @media (max-width: 320px) {
+            .navbar-brand {
+                font-size: 14px;
+                padding: 8px 5px;
+            }
+
+            .panel-left,
+            .panel-right {
+                width: 100%;
+                padding: 10px;
+            }
+
+            .layer-item {
+                font-size: 11px;
+                padding: 6px;
+            }
+
+            .modal-content {
+                width: 98%;
+                padding: 15px;
+            }
+        }
         </style>
         <title>GeoZiguinchor - Application Cartographique</title>
     </head>
@@ -325,7 +497,13 @@
                 <li><a href="#requete-attributaire" class="nav-link">Requête Attributaire</a></li>
                 <li><a href="#telecharger" class="nav-link">Télécharger Données</a></li>
             </ul>
+            <!-- Mobile Menu Buttons -->
+            <button class="mobile-menu-btn" id="toggleLeftPanel" title="Afficher les couches administratives">☰</button>
+            <button class="mobile-menu-btn" id="toggleRightPanel" title="Afficher les couches et fonds de carte">⚙️</button>
         </nav>
+
+        <!-- Mobile Panel Overlay -->
+        <div class="mobile-panel-overlay" id="mobilePanelOverlay"></div>
         
         <!-- Modal À propos -->
         <div id="modalAPropos" class="modal">
@@ -2252,6 +2430,63 @@
                 });
             }
         }
+
+        // MOBILE RESPONSIVE PANEL CONTROLS
+        document.addEventListener('DOMContentLoaded', function() {
+            const toggleLeftBtn = document.getElementById('toggleLeftPanel');
+            const toggleRightBtn = document.getElementById('toggleRightPanel');
+            const leftPanel = document.querySelector('.panel-left');
+            const rightPanel = document.querySelector('.panel-right');
+            const mobilePanelOverlay = document.getElementById('mobilePanelOverlay');
+
+            // Toggle left panel
+            if (toggleLeftBtn) {
+                toggleLeftBtn.addEventListener('click', function() {
+                    leftPanel.classList.toggle('mobile-open');
+                    rightPanel.classList.remove('mobile-open');
+                    mobilePanelOverlay.classList.toggle('show');
+                });
+            }
+
+            // Toggle right panel
+            if (toggleRightBtn) {
+                toggleRightBtn.addEventListener('click', function() {
+                    rightPanel.classList.toggle('mobile-open');
+                    leftPanel.classList.remove('mobile-open');
+                    mobilePanelOverlay.classList.toggle('show');
+                });
+            }
+
+            // Close panels when overlay is clicked
+            if (mobilePanelOverlay) {
+                mobilePanelOverlay.addEventListener('click', function() {
+                    leftPanel.classList.remove('mobile-open');
+                    rightPanel.classList.remove('mobile-open');
+                    mobilePanelOverlay.classList.remove('show');
+                });
+            }
+
+            // Close panels when clicking outside on mobile
+            document.addEventListener('click', function(e) {
+                const isClickInsidePanel = leftPanel.contains(e.target) || rightPanel.contains(e.target);
+                const isClickOnButton = toggleLeftBtn.contains(e.target) || toggleRightBtn.contains(e.target);
+                
+                if (!isClickInsidePanel && !isClickOnButton) {
+                    leftPanel.classList.remove('mobile-open');
+                    rightPanel.classList.remove('mobile-open');
+                    mobilePanelOverlay.classList.remove('show');
+                }
+            });
+
+            // Handle window resize - close panels on larger screens
+            window.addEventListener('resize', function() {
+                if (window.innerWidth > 768) {
+                    leftPanel.classList.remove('mobile-open');
+                    rightPanel.classList.remove('mobile-open');
+                    mobilePanelOverlay.classList.remove('show');
+                }
+            });
+        });
         </script>
         <!-- PWA Manager - Complete geolocation, installation and service worker handling -->
         <script src="/ziguinchor/js/pwa-manager.js"></script>

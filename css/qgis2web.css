@@ -220,7 +220,75 @@
                 2px 1px 0 #fafafa,
                 2px 2px 0 #fafafa;
         }
-        .css_Arrondissement_5 {
+
+        /* Mobile optimizations for popups */
+        @media (max-width: 768px) {
+            .leaflet-popup-content {
+                max-height: 50vh;
+                max-width: 90vw !important;
+                font-size: 13px;
+            }
+
+            .leaflet-popup-content td,
+            .leaflet-popup-content th {
+                min-width: auto;
+                padding: 4px;
+                font-size: 12px;
+            }
+
+            .leaflet-popup-content td img {
+                max-height: 40vh;
+                max-width: 85vw;
+            }
+
+            .leaflet-control {
+                margin: 8px !important;
+            }
+
+            .abstract {
+                width: 28px !important;
+                height: 28px !important;
+                line-height: 28px !important;
+                font-size: 14px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .leaflet-popup-content {
+                max-height: 45vh;
+                max-width: 95vw !important;
+                font-size: 12px;
+            }
+
+            .leaflet-popup-content td,
+            .leaflet-popup-content th {
+                min-width: auto;
+                padding: 3px;
+                font-size: 11px;
+            }
+
+            .leaflet-popup-content td img {
+                max-height: 35vh;
+                max-width: 90vw;
+            }
+
+            .leaflet-control {
+                margin: 4px !important;
+            }
+
+            .abstract {
+                width: 26px !important;
+                height: 26px !important;
+                line-height: 26px !important;
+                font-size: 12px !important;
+            }
+
+            .abstractUncollapsed {
+                max-width: 95vw;
+                font-size: 11px;
+            }
+        }
+                .css_Arrondissement_5 {
             text-shadow: -2px -2px 0 #fafafa,
                 -2px -1px 0 #fafafa,
                 -2px 0px 0 #fafafa,

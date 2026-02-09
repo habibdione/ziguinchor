@@ -331,10 +331,46 @@ html, body {
     outline-offset: 2px;
 }
 
-@media (prefers-reduced-motion: reduce) {
-    .pwa-control-btn,
-    #pwa-install-btn,
-    #pwa-geolocate-btn.active,
+/* Additional mobile optimizations */
+@media (max-width: 480px) {
+    .pwa-control-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 11px;
+        bottom: 8px;
+        right: 8px;
+    }
+
+    #pwa-geolocate-btn {
+        bottom: 48px;
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+
+    #pwa-install-btn {
+        bottom: 92px;
+        padding: 5px 8px;
+        font-size: 11px;
+    }
+}
+
+/* Ensure buttons don't overlap with mobile panel buttons */
+@media (max-width: 768px) {
+    .pwa-control-btn {
+        bottom: 20px;
+        right: 20px;
+        z-index: 150;
+    }
+
+    #pwa-geolocate-btn {
+        z-index: 150;
+    }
+
+    #pwa-install-btn {
+        z-index: 150;
+    }
+}
+
     #pwa-toast {
         animation: none;
         transition: none;
