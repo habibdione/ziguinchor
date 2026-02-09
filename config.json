@@ -1,0 +1,228 @@
+{
+  "app": {
+    "name": "GeoZiguinchor",
+    "version": "2.0.0",
+    "description": "Application cartographique interactive de la région de Ziguinchor",
+    "author": "Développeur SIG",
+    "email": "contact@geoziguinchor.local",
+    "website": "http://localhost/geoziguinchor/",
+    "license": "MIT"
+  },
+  "map": {
+    "center": [13.5, -14.5],
+    "zoom": 10,
+    "minZoom": 1,
+    "maxZoom": 20,
+    "defaultBasemap": "Google Hybrid",
+    "attribution": "© OpenStreetMap contributors"
+  },
+  "geolocation": {
+    "enabled": true,
+    "enableHighAccuracy": true,
+    "timeout": 5000,
+    "maximumAge": 0,
+    "autoCenter": true,
+    "zoomLevel": 15
+  },
+  "colors": {
+    "primary": "#2c3e50",
+    "secondary": "#3498db",
+    "success": "#27ae60",
+    "danger": "#e74c3c",
+    "warning": "#f39c12",
+    "light": "#ecf0f1",
+    "dark": "#34495e"
+  },
+  "basemaps": [
+    {
+      "name": "Google Hybrid",
+      "url": "https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",
+      "attribution": "© Google Maps",
+      "active": true
+    },
+    {
+      "name": "Dark Matter",
+      "url": "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+      "attribution": "© CartoDB",
+      "active": false
+    },
+    {
+      "name": "OpenStreetMap",
+      "url": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+      "attribution": "© OpenStreetMap contributors",
+      "active": false
+    }
+  ],
+  "layers": [
+    {
+      "id": "Rgion_3",
+      "name": "Région",
+      "type": "geojson",
+      "visible": true,
+      "showInControl": true,
+      "zIndex": 403,
+      "icon": "legend/Rgion_3.png"
+    },
+    {
+      "id": "Departement_4",
+      "name": "Département",
+      "type": "geojson",
+      "visible": true,
+      "showInControl": true,
+      "zIndex": 404,
+      "icon": "legend/Departement_4.png"
+    },
+    {
+      "id": "Arrondissement_5",
+      "name": "Arrondissement",
+      "type": "geojson",
+      "visible": true,
+      "showInControl": true,
+      "zIndex": 405,
+      "icon": "legend/Arrondissement_5.png"
+    },
+    {
+      "id": "Routes_6",
+      "name": "Routes",
+      "type": "geojson",
+      "visible": true,
+      "showInControl": true,
+      "zIndex": 406,
+      "icon": "legend/Routes_6.png"
+    },
+    {
+      "id": "Localits_7",
+      "name": "Localités",
+      "type": "geojson",
+      "visible": true,
+      "showInControl": true,
+      "zIndex": 407,
+      "clustered": true,
+      "icon": "legend/Localits_7.png"
+    },
+    {
+      "id": "Ecoles_8",
+      "name": "Écoles",
+      "type": "geojson",
+      "visible": true,
+      "showInControl": true,
+      "zIndex": 408,
+      "clustered": true,
+      "icon": "legend/Ecoles_8.png"
+    }
+  ],
+  "controls": {
+    "zoom": {
+      "enabled": false,
+      "position": "topleft"
+    },
+    "locate": {
+      "enabled": true,
+      "position": "topleft",
+      "maxZoom": 19
+    },
+    "measure": {
+      "enabled": true,
+      "position": "topleft",
+      "primaryLengthUnit": "meters",
+      "secondaryLengthUnit": "kilometers",
+      "primaryAreaUnit": "sqmeters",
+      "secondaryAreaUnit": "hectares"
+    },
+    "layers": {
+      "enabled": true,
+      "position": "left",
+      "collapsed": false,
+      "width": 300
+    },
+    "legend": {
+      "enabled": true,
+      "position": "right",
+      "collapsed": false,
+      "width": 320
+    },
+    "info": {
+      "enabled": true,
+      "position": "bottom",
+      "showCoordinates": true,
+      "showZoom": true,
+      "showScale": true
+    }
+  },
+  "features": {
+    "geolocation": true,
+    "offline": true,
+    "export": true,
+    "print": true,
+    "search": true,
+    "share": true,
+    "darkMode": true,
+    "responsive": true,
+    "serviceworker": true
+  },
+  "cache": {
+    "enabled": true,
+    "version": "v1.0",
+    "maxAge": 2592000,
+    "maxSize": 104857600
+  },
+  "performance": {
+    "clusterMarkers": true,
+    "clusterRadius": 80,
+    "debounceZoom": 300,
+    "debounceMove": 200,
+    "loadDataAsync": true
+  },
+  "ui": {
+    "showNavbar": true,
+    "showLeftPanel": true,
+    "showRightPanel": true,
+    "showInfoBar": true,
+    "mobileDrawerWidth": 280,
+    "desktopDrawerWidth": 300,
+    "animationDuration": 300,
+    "touchFriendly": true
+  },
+  "notifications": {
+    "enabled": true,
+    "position": "bottom-right",
+    "duration": 3000,
+    "maxStack": 5
+  },
+  "export": {
+    "formats": ["geojson", "csv", "kml"],
+    "includeMetadata": true,
+    "pretty": true
+  },
+  "security": {
+    "corsProxy": null,
+    "allowExternalApis": true,
+    "contentSecurityPolicy": {
+      "enabled": true,
+      "directives": {
+        "defaultSrc": ["'self'"],
+        "scriptSrc": ["'self'", "'unsafe-inline'", "*.mapbox.com", "*.openstreetmap.org"],
+        "styleSrc": ["'self'", "'unsafe-inline'", "fonts.googleapis.com"],
+        "imgSrc": ["'self'", "data:", "https:"],
+        "connectSrc": ["'self'", "*.openstreetmap.org", "*.mapbox.com", "nominatim.openstreetmap.org"]
+      }
+    }
+  },
+  "analytics": {
+    "enabled": false,
+    "googleAnalyticsId": null,
+    "trackingEvents": [
+      "map_view",
+      "feature_click",
+      "export_data",
+      "geolocation_used"
+    ]
+  },
+  "logging": {
+    "enabled": true,
+    "level": "info",
+    "console": true,
+    "file": false,
+    "maxLogs": 1000
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "geoziguinchor",
+  "version": "2.0.0",
+  "description": "Application cartographique progressive interactive de Ziguinchor",
+  "main": "index.html",
+  "scripts": {
+    "start": "http-server . -p 8080 -c-1",
+    "dev": "http-server . -p 8080 -c-1",
+    "build": "npm run minify-css && npm run minify-js",
+    "minify-css": "cleancss -o dist/app.min.css css/app.css",
+    "minify-js": "uglifyjs js/app.js -o dist/app.min.js",
+    "serve": "python -m http.server 8000",
+    "test": "jest",
+    "lint": "eslint js/app.js",
+    "deploy": "bash scripts/deploy.sh",
+    "validate": "node scripts/validate.js",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "keywords": [
+    "map",
+    "cartography",
+    "gis",
+    "pwa",
+    "geolocation",
+    "leaflet",
+    "qgis",
+    "ziguinchor",
+    "senegal",
+    "progressive-web-app"
+  ],
+  "author": "Développeur SIG",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/geoziguinchor.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/geoziguinchor/issues"
+  },
+  "homepage": "https://github.com/yourusername/geoziguinchor#readme",
+  "devDependencies": {
+    "clean-css": "^5.3.0",
+    "eslint": "^8.40.0",
+    "http-server": "^14.1.1",
+    "uglify-js": "^3.17.4",
+    "workbox-cli": "^7.0.0"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "leaflet-cluster": "^1.0.0",
+    "leaflet-measure": "^3.1.0"
+  },
+  "engines": {
+    "node": ">=14.0.0",
+    "npm": ">=6.0.0"
+  },
+  "browserslist": [
+    "> 0.2%",
+    "last 2 versions",
+    "not dead",
+    "not IE 11"
+  ]
+}

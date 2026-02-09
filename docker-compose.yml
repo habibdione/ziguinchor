@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  geoziguinchor:
+    image: httpd:2.4-alpine
+    container_name: geoziguinchor-app
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./:/usr/local/apache2/htdocs/geoziguinchor
+      - ./docker/httpd.conf:/usr/local/apache2/conf/httpd.conf:ro
+      - ./docker/ssl:/usr/local/apache2/conf/ssl:ro
+    environment:
+      - APACHE_RUN_USER=www-data
+      - APACHE_RUN_GROUP=www-data
+    networks:
+      - geoziguinchor-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/geoziguinchor/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  geoziguinchor-network:
+    driver: bridge
+
+# Usage:
+# docker-compose up -d          # Start service
+# docker-compose down            # Stop service
+# docker-compose logs -f         # View logs
+# docker-compose ps              # Show status

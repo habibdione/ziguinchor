@@ -1,0 +1,2167 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/MarkerCluster.css">
+        <link rel="stylesheet" href="css/MarkerCluster.Default.css">
+        <link rel="stylesheet" href="css/leaflet.photon.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
+        <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .navbar {
+            background-color: #27ae60;
+            overflow: hidden;
+            padding: 0;
+            margin: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 60px;
+            position: relative;
+            z-index: 500;
+        }
+        .navbar-brand {
+            color: white;
+            padding: 10px 20px;
+            font-size: 18px;
+            font-weight: bold;
+            text-decoration: none;
+            margin-right: auto;
+        }
+        .navbar-menu {
+            display: flex;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            margin-right: 20px;
+        }
+        .navbar-menu li {
+            margin: 0;
+        }
+        .navbar-menu a {
+            display: block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-size: 14px;
+            transition: background-color 0.3s;
+        }
+        .navbar-menu a:hover {
+            background-color: #3498db;
+        }
+        .navbar-menu a.active {
+            background-color: #3498db;
+            border-bottom: 3px solid #e74c3c;
+        }
+        /* Main Layout Container */
+        .container-main {
+            display: flex;
+            height: calc(100vh - 60px);
+            gap: 0;
+        }
+        /* Left Panel */
+        .panel-left {
+            width: 280px;
+            background-color: #f8f9fa;
+            border-right: 2px solid #ddd;
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .panel-left h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 14px;
+        }
+        /* Map Container */
+        #map {
+            flex: 1;
+            margin: 0;
+            padding: 0;
+            position: relative;
+        }
+        /* Right Panel */
+        .panel-right {
+            width: 280px;
+            background-color: #f8f9fa;
+            border-left: 2px solid #ddd;
+            overflow-y: auto;
+            padding: 15px;
+            box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+        }
+        .panel-right h3 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-top: 0;
+            font-size: 14px;
+        }
+        /* Layer Checkbox Styles */
+        .layer-item {
+            margin: 8px 0;
+            padding: 8px;
+            background-color: white;
+            border-radius: 4px;
+            border-left: 3px solid transparent;
+            transition: all 0.3s;
+        }
+        .layer-item:hover {
+            background-color: #e8f4f8;
+            border-left-color: #3498db;
+        }
+        .layer-item label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin: 0;
+            font-size: 13px;
+            color: #333;
+        }
+        .layer-item input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .layer-item input[type="radio"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+        .basemap-group {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+        /* Tab Styles for Right Panel */
+        .panel-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ddd;
+        }
+        .panel-tab-btn {
+            padding: 8px 12px;
+            background-color: #e8f4f8;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            color: #555;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+        .panel-tab-btn:hover {
+            background-color: #d4e9f4;
+        }
+        .panel-tab-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-bottom-color: #2980b9;
+        }
+        .panel-tab-content {
+            display: none;
+        }
+        .panel-tab-content.active {
+            display: block;
+        }
+        .layer-priority-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            font-size: 13px;
+        }
+        .layer-priority-controls {
+            display: flex;
+            gap: 4px;
+        }
+        .priority-btn {
+            padding: 3px 6px;
+            background-color: #ecf0f1;
+            border: 1px solid #bdc3c7;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+        .priority-btn:hover {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s;
+        }
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 15px;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #2c3e50;
+        }
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 28px;
+            font-weight: bold;
+            color: #7f8c8d;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close-btn:hover {
+            color: #e74c3c;
+        }
+        .modal-body {
+            color: #333;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        .modal-body h3 {
+            color: #2c3e50;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        .modal-body p, .modal-body ul {
+            margin: 10px 0;
+        }
+        .modal-body li {
+            margin: 8px 0;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        </style>
+        <title>GeoZiguinchor - Application Cartographique</title>
+    </head>
+    <body>
+        <!-- Navigation Bar -->
+        <nav class="navbar">
+            <a href="#" class="navbar-brand">🗺️ GeoZiguinchor</a>
+            <ul class="navbar-menu">
+                <li><a href="#accueil" class="nav-link active">Accueil</a></li>
+                <li><a href="#apropos" class="nav-link">À propos</a></li>
+                <li><a href="#requete-spatiale" class="nav-link">Requête Spatiale</a></li>
+                <li><a href="#requete-attributaire" class="nav-link">Requête Attributaire</a></li>
+                <li><a href="#telecharger" class="nav-link">Télécharger Données</a></li>
+            </ul>
+        </nav>
+        
+        <!-- Modal À propos -->
+        <div id="modalAPropos" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>À propos</h2>
+                    <button class="close-btn" onclick="closeModal('modalAPropos')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <h3>🌍 Présentation générale</h3>
+                    <p>GeoZiguinchor est une application Web SIG dédiée à la visualisation, à l'analyse et à la gestion des données géospatiales relatives aux activités de salubrité et d'aménagement du territoire dans la région de Ziguinchor.<br>
+                    Elle constitue un outil d'aide à la décision destiné à améliorer la planification, le suivi et l'efficacité des interventions sur le terrain.</p>
+
+                    <h3>🎯 Objectifs de la plateforme</h3>
+                    <ul>
+                        <li>Centraliser les données géographiques de la région</li>
+                        <li>Améliorer la planification des opérations de terrain</li>
+                        <li>Faciliter le suivi des équipements et des infrastructures</li>
+                        <li>Appuyer la prise de décision par des analyses spatiales</li>
+                        <li>Contribuer à l'amélioration du cadre de vie des populations</li>
+                    </ul>
+
+                    <h3>🗺️ Données et thématiques couvertes</h3>
+                    <p>L'application permet de consulter et analyser :</p>
+                    <ul>
+                        <li>Les limites administratives (région, départements, arrondissements, communes)</li>
+                        <li>Les localités et infrastructures publiques (écoles, équipements)</li>
+                        <li>Le réseau routier</li>
+                        <li>Les zones d'intervention opérationnelle</li>
+                        <li>Les données spatiales liées à la gestion et à la planification territoriale</li>
+                    </ul>
+
+                    <h3>🔍 Fonctionnalités principales</h3>
+                    <ul>
+                        <li>Visualisation cartographique interactive</li>
+                        <li>Gestion des couches thématiques</li>
+                        <li>Requêtes spatiales</li>
+                        <li>Requêtes attributaires</li>
+                        <li>Téléchargement de données géographiques</li>
+                        <li>Choix de fonds de carte (OpenStreetMap, Google Hybrid, Dark Matter, etc.)</li>
+                    </ul>
+
+                    <h3>🧰 Technologies utilisées</h3>
+                    <ul>
+                        <li>Systèmes d'Information Géographique (SIG)</li>
+                        <li>QGIS / qgis2web</li>
+                        <li>Leaflet</li>
+                        <li>Données OpenStreetMap et fonds cartographiques externes</li>
+                    </ul>
+
+                    <h3>📌 Zone couverte</h3>
+                    <p><strong>Région de Ziguinchor</strong></p>
+                    <ul>
+                        <li>Départements : Bignona, Oussouye, Ziguinchor</li>
+                        <li>Arrondissements et communes associées</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Requête Spatiale -->
+        <div id="modalRequeteSpatiale" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Requête Spatiale</h2>
+                    <button class="close-btn" onclick="closeModal('modalRequeteSpatiale')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <!-- Tabs Navigation -->
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #3498db;">
+                        <button onclick="showTab('tab-zone')" class="tab-btn active" style="padding: 10px; background: none; border: none; cursor: pointer; color: #2c3e50; font-weight: bold;">1️⃣ Par Zone</button>
+                        <button onclick="showTab('tab-proximite')" class="tab-btn" style="padding: 10px; background: none; border: none; cursor: pointer; color: #2c3e50; font-weight: bold;">2️⃣ Proximité</button>
+                        <button onclick="showTab('tab-overlay')" class="tab-btn" style="padding: 10px; background: none; border: none; cursor: pointer; color: #2c3e50; font-weight: bold;">3️⃣ Overlay</button>
+                        <button onclick="showTab('tab-buffer')" class="tab-btn" style="padding: 10px; background: none; border: none; cursor: pointer; color: #2c3e50; font-weight: bold;">4️⃣ Buffer</button>
+                        <button onclick="showTab('tab-filtrage')" class="tab-btn" style="padding: 10px; background: none; border: none; cursor: pointer; color: #2c3e50; font-weight: bold;">5️⃣ Filtrage</button>
+                    </div>
+
+                    <!-- Tab 1: Sélection par Zone -->
+                    <div id="tab-zone" class="tab-content" style="display: block;">
+                        <h3>1️⃣ Sélection par zone (intersection / inclusion)</h3>
+                        <form style="margin: 15px 0;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Sélectionner la couche :</label>
+                                <select id="zone-layer" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">-- Choisir une couche --</option>
+                                    <option value="communes">Communes</option>
+                                    <option value="arrondissements">Arrondissements</option>
+                                    <option value="departements">Départements</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zone à analyser :</label>
+                                <select id="zone-value" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">-- Sélectionner une zone --</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Couches à analyser :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="ecoles"> Écoles</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="localites"> Localités</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="routes"> Routes</label>
+                            </div>
+                            <button type="button" onclick="executeZoneQuery()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔍 Exécuter la requête</button>
+                        </form>
+                    </div>
+
+                    <!-- Tab 2: Requête de Proximité -->
+                    <div id="tab-proximite" class="tab-content" style="display: none;">
+                        <h3>2️⃣ Requête de proximité (distance)</h3>
+                        <form style="margin: 15px 0;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Référence (point ou zone) :</label>
+                                <select id="proximite-reference" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">-- Choisir une référence --</option>
+                                    <option value="routes">Routes</option>
+                                    <option value="localites">Localités</option>
+                                    <option value="points">Points personnalisés</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Distance (en mètres) :</label>
+                                <input type="number" id="proximite-distance" min="0" step="100" value="500" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Objets à rechercher :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="ecoles" checked> Écoles</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="infrastructures"> Infrastructures</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="localites"> Localités</label>
+                            </div>
+                            <button type="button" onclick="executeProximiteQuery()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔍 Exécuter la requête</button>
+                        </form>
+                    </div>
+
+                    <!-- Tab 3: Sélection par Overlay -->
+                    <div id="tab-overlay" class="tab-content" style="display: none;">
+                        <h3>3️⃣ Sélection par superposition (overlay)</h3>
+                        <form style="margin: 15px 0;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Couche de base :</label>
+                                <select id="overlay-base" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">-- Choisir une couche --</option>
+                                    <option value="communes">Communes</option>
+                                    <option value="arrondissements">Arrondissements</option>
+                                    <option value="departements">Départements</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Couches à superposer :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="ecoles"> Écoles</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="routes"> Routes</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="localites"> Localités</label>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Type d'intersection :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="radio" name="intersection" value="intersects" checked> Intersecte</label>
+                                <label style="display: block; margin: 5px 0;"><input type="radio" name="intersection" value="within"> Contient</label>
+                                <label style="display: block; margin: 5px 0;"><input type="radio" name="intersection" value="touches"> Touche</label>
+                            </div>
+                            <button type="button" onclick="executeOverlayQuery()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔍 Exécuter la requête</button>
+                        </form>
+                    </div>
+
+                    <!-- Tab 4: Analyse par Buffer -->
+                    <div id="tab-buffer" class="tab-content" style="display: none;">
+                        <h3>4️⃣ Analyse par tampon (buffer)</h3>
+                        <form style="margin: 15px 0;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Couche source :</label>
+                                <select id="buffer-source" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">-- Choisir une couche --</option>
+                                    <option value="ecoles">Écoles</option>
+                                    <option value="localites">Localités</option>
+                                    <option value="routes">Routes</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Rayon du tampon (en mètres) :</label>
+                                <input type="number" id="buffer-radius" min="0" step="100" value="1000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Objets à inclure :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="ecoles"> Écoles</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="infrastructures"> Infrastructures</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" value="localites"> Localités</label>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Style de visualisation :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="radio" name="buffer-style" value="transparent" checked> Transparent</label>
+                                <label style="display: block; margin: 5px 0;"><input type="radio" name="buffer-style" value="filled"> Rempli</label>
+                            </div>
+                            <button type="button" onclick="executeBufferQuery()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔍 Exécuter la requête</button>
+                        </form>
+                    </div>
+
+                    <!-- Tab 5: Filtrage Spatial Dynamique -->
+                    <div id="tab-filtrage" class="tab-content" style="display: none;">
+                        <h3>5️⃣ Filtrage spatial dynamique</h3>
+                        <form style="margin: 15px 0;">
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Sélection des couches visibles :</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" id="filtrage-ecoles" value="ecoles" checked> Écoles</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" id="filtrage-localites" value="localites" checked> Localités</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" id="filtrage-routes" value="routes" checked> Routes</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" id="filtrage-arrondissements" value="arrondissements" checked> Arrondissements</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" id="filtrage-departements" value="departements" checked> Départements</label>
+                                <label style="display: block; margin: 5px 0;"><input type="checkbox" id="filtrage-region" value="region" checked> Région</label>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: bold;">Zone d'intérêt :</label>
+                                <select id="filtrage-zone" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                    <option value="">-- Emprise actuelle de la carte --</option>
+                                    <option value="bignona">Bignona</option>
+                                    <option value="oussouye">Oussouye</option>
+                                    <option value="ziguinchor">Ziguinchor</option>
+                                </select>
+                            </div>
+                            <div style="margin-bottom: 15px;">
+                                <label style="display: block; margin-bottom: 5px;">
+                                    <input type="checkbox" id="filtrage-auto" checked> Mise à jour automatique lors du déplacement
+                                </label>
+                            </div>
+                            <button type="button" onclick="executeFiltrageQuery()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">🔍 Appliquer le filtrage</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Requête Attributaire -->
+        <div id="modalRequeteAttributaire" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Requête Attributaire</h2>
+                    <button class="close-btn" onclick="closeModal('modalRequeteAttributaire')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form style="margin: 15px 0;">
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">1️⃣ Sélectionner une couche :</label>
+                            <select id="attributaire-couche" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Choisir une couche --</option>
+                                <option value="ecoles">Écoles</option>
+                                <option value="localites">Localités</option>
+                                <option value="routes">Routes</option>
+                                <option value="arrondissements">Arrondissements</option>
+                                <option value="departements">Départements</option>
+                                <option value="region">Région</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">2️⃣ Choisir un champ attributaire :</label>
+                            <select id="attributaire-champ" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Sélectionner un champ --</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">3️⃣ Condition de recherche :</label>
+                            <select id="attributaire-operateur" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Choisir un opérateur --</option>
+                                <option value="equal">Égal à (=)</option>
+                                <option value="notequal">Différent de (≠)</option>
+                                <option value="contains">Contient</option>
+                                <option value="startswith">Commence par</option>
+                                <option value="greater">Supérieur à (&gt;)</option>
+                                <option value="less">Inférieur à (&lt;)</option>
+                                <option value="between">Entre deux valeurs</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">Valeur de recherche :</label>
+                            <input type="text" id="attributaire-valeur1" placeholder="Entrez la valeur" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; margin-bottom: 10px;">
+                            <input type="text" id="attributaire-valeur2" placeholder="Valeur maximum (pour Entre)" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; display: none;">
+                        </div>
+
+                        <div style="margin-bottom: 15px; padding: 10px; background-color: #ecf0f1; border-radius: 4px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">📊 Options d'affichage :</label>
+                            <label style="display: block; margin: 5px 0;"><input type="checkbox" id="attributaire-carte" checked> Afficher sur la carte</label>
+                            <label style="display: block; margin: 5px 0;"><input type="checkbox" id="attributaire-tableau" checked> Afficher dans un tableau</label>
+                            <label style="display: block; margin: 5px 0;"><input type="checkbox" id="attributaire-highlight"> Mettre en évidence les résultats</label>
+                        </div>
+
+                        <button type="button" onclick="executeAttributaireQuery()" style="padding: 10px 20px; background-color: #3498db; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%;">🔍 Exécuter la requête</button>
+                    </form>
+
+                    <!-- Results Table -->
+                    <div id="attributaire-resultats" style="margin-top: 20px; display: none;">
+                        <h3>📋 Résultats de la requête</h3>
+                        <table id="attributaire-tableau" style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+                            <thead>
+                                <tr style="background-color: #3498db; color: white;">
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">ID</th>
+                                    <th style="padding: 10px; text-align: left; border: 1px solid #ddd;">Attributs</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal Télécharger Données -->
+        <div id="modalTelecharger" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Télécharger Données</h2>
+                    <button class="close-btn" onclick="closeModal('modalTelecharger')">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form style="margin: 15px 0;">
+                        <div style="margin-bottom: 20px; padding: 15px; background-color: #e8f4f8; border-left: 4px solid #3498db; border-radius: 4px;">
+                            <p style="margin: 0; color: #2c3e50;"><strong>📥 Guide pas à pas :</strong></p>
+                            <ol style="margin: 10px 0 0 20px; color: #555;">
+                                <li>Sélectionnez la couche de données souhaitée</li>
+                                <li>Choisissez le format de téléchargement</li>
+                                <li>Cliquez sur "Télécharger"</li>
+                                <li>Utilisez les données dans un SIG ou autre outil compatible</li>
+                            </ol>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">1️⃣ Sélectionner une couche :</label>
+                            <select id="telecharger-couche" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">-- Choisir une couche --</option>
+                                <option value="ecoles">Écoles</option>
+                                <option value="localites">Localités</option>
+                                <option value="routes">Routes</option>
+                                <option value="arrondissements">Arrondissements</option>
+                                <option value="departements">Départements</option>
+                                <option value="region">Région</option>
+                            </select>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">2️⃣ Choisir le format :</label>
+                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+                                <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="telecharger-format" value="geojson" checked style="margin-right: 8px;"> <span><strong>GeoJSON</strong><br><small>.geojson</small></span>
+                                </label>
+                                <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="telecharger-format" value="shapefile" style="margin-right: 8px;"> <span><strong>Shapefile</strong><br><small>.shp</small></span>
+                                </label>
+                                <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="telecharger-format" value="kml" style="margin-right: 8px;"> <span><strong>KML</strong><br><small>.kml</small></span>
+                                </label>
+                                <label style="display: flex; align-items: center; padding: 10px; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="radio" name="telecharger-format" value="csv" style="margin-right: 8px;"> <span><strong>CSV</strong><br><small>.csv</small></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px;">
+                            <label style="display: block; margin-bottom: 10px; font-weight: bold;">📋 Informations du fichier :</label>
+                            <div id="telecharger-info" style="font-size: 13px; color: #555; line-height: 1.6;">
+                                <p>Sélectionnez une couche pour afficher les détails</p>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 15px;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: bold;">🔧 Options :</label>
+                            <label style="display: block; margin: 5px 0;"><input type="checkbox" id="telecharger-filtre"> Télécharger uniquement les données visibles</label>
+                            <label style="display: block; margin: 5px 0;"><input type="checkbox" id="telecharger-exemple"> Afficher un aperçu avant téléchargement</label>
+                            <label style="display: block; margin: 5px 0;"><input type="checkbox" id="telecharger-compression"> Compresser en ZIP</label>
+                        </div>
+
+                        <button type="button" onclick="executeTelecharger()" style="padding: 12px 20px; background-color: #27ae60; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; font-size: 16px;">📥 Télécharger</button>
+                    </form>
+
+                    <!-- Format Info -->
+                    <div style="margin-top: 30px; padding: 15px; background-color: #ecf0f1; border-radius: 4px;">
+                        <h3 style="margin-top: 0; color: #2c3e50;">ℹ️ Formats disponibles</h3>
+                        <div style="font-size: 13px; line-height: 1.8; color: #555;">
+                            <p><strong>📍 GeoJSON (.geojson)</strong> - Format standard pour les données géographiques, compatible avec tous les SIG</p>
+                            <p><strong>📦 Shapefile (.shp)</strong> - Format classique ESRI, largement utilisé en cartographie</p>
+                            <p><strong>🗺️ KML (.kml)</strong> - Format pour Google Earth et autres applications</p>
+                            <p><strong>📊 CSV (.csv)</strong> - Format tabulaire avec coordonnées géographiques pour usage dans spreadsheets</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Container with Left and Right Panels -->
+        <div class="container-main">
+            <!-- LEFT PANEL - Couches Administratives -->
+            <div class="panel-left">
+                <h3>🏛️ Couches Administratives</h3>
+                <div class="layer-item">
+                    <label>
+                        <input type="checkbox" id="layer-region" checked> Région
+                    </label>
+                </div>
+                <div class="layer-item">
+                    <label>
+                        <input type="checkbox" id="layer-departement" checked> Département
+                    </label>
+                </div>
+                <div class="layer-item">
+                    <label>
+                        <input type="checkbox" id="layer-arrondissement" checked> Arrondissement
+                    </label>
+                </div>
+            </div>
+            
+            <!-- CENTER - Map -->
+            <div id="map"></div>
+            
+            <!-- RIGHT PANEL - Layers and Basemaps with Tabs -->
+            <div class="panel-right">
+                <!-- Tab Navigation -->
+                <div class="panel-tabs">
+                    <button class="panel-tab-btn active" onclick="switchRightTab('layers-tab')">📍 Couches</button>
+                    <button class="panel-tab-btn" onclick="switchRightTab('basemap-legend-tab')">🗺️ Basemaps & 📖</button>
+                </div>
+                
+                <!-- TAB 1: Couches et Priorité -->
+                <div id="layers-tab" class="panel-tab-content active">
+                    <h3 style="margin-top: 0; font-size: 14px;">Couches Disponibles</h3>
+                    <p style="font-size: 11px; color: #666; margin: 5px 0 10px 0;">Utilisez ⬆️ ⬇️ pour ajuster la priorité d'affichage</p>
+                    
+                    <!-- Écoles -->
+                    <div class="layer-priority-item">
+                        <label style="display: flex; align-items: center; margin: 0; cursor: pointer; flex: 1;">
+                            <input type="checkbox" id="layer-ecoles" checked style="margin-right: 8px;"> 
+                            <span>Écoles</span>
+                        </label>
+                        <div class="layer-priority-controls">
+                            <button class="priority-btn" onclick="moveLayerUp('ecoles')" title="Augmenter la priorité">⬆️</button>
+                            <button class="priority-btn" onclick="moveLayerDown('ecoles')" title="Diminuer la priorité">⬇️</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Localités -->
+                    <div class="layer-priority-item">
+                        <label style="display: flex; align-items: center; margin: 0; cursor: pointer; flex: 1;">
+                            <input type="checkbox" id="layer-localites" checked style="margin-right: 8px;"> 
+                            <span>Localités</span>
+                        </label>
+                        <div class="layer-priority-controls">
+                            <button class="priority-btn" onclick="moveLayerUp('localites')" title="Augmenter la priorité">⬆️</button>
+                            <button class="priority-btn" onclick="moveLayerDown('localites')" title="Diminuer la priorité">⬇️</button>
+                        </div>
+                    </div>
+                    
+                    <!-- Routes -->
+                    <div class="layer-priority-item">
+                        <label style="display: flex; align-items: center; margin: 0; cursor: pointer; flex: 1;">
+                            <input type="checkbox" id="layer-routes" checked style="margin-right: 8px;"> 
+                            <span>Routes</span>
+                        </label>
+                        <div class="layer-priority-controls">
+                            <button class="priority-btn" onclick="moveLayerUp('routes')" title="Augmenter la priorité">⬆️</button>
+                            <button class="priority-btn" onclick="moveLayerDown('routes')" title="Diminuer la priorité">⬇️</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- TAB 2: Basemaps et Légende -->
+                <div id="basemap-legend-tab" class="panel-tab-content">
+                    <!-- Basemaps Section -->
+                    <h3>🗺️ Fonds de Carte Disponibles</h3>
+                    <div class="layer-item">
+                        <label>
+                            <input type="radio" name="basemap" value="openstreetmap"> OpenStreetMap
+                        </label>
+                    </div>
+                    <div class="layer-item">
+                        <label>
+                            <input type="radio" name="basemap" value="darkmatter"> Dark Matter
+                        </label>
+                    </div>
+                    <div class="layer-item">
+                        <label>
+                            <input type="radio" name="basemap" value="google" checked> Google Hybrid
+                        </label>
+                    </div>
+                    
+                    <!-- Legend Section -->
+                    <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                        <h3>📖 Légende</h3>
+                        
+                        <!-- Couches Administratives -->
+                        <div style="margin-bottom: 12px;">
+                            <p style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #555;">Couches Administratives :</p>
+                            <div style="margin-left: 8px; font-size: 12px;">
+                                <div style="margin: 4px 0; display: flex; align-items: center;">
+                                    <span style="width: 20px; height: 3px; background-color: rgba(35,35,35,1); margin-right: 8px;"></span>
+                                    <span>Région</span>
+                                </div>
+                                <div style="margin: 4px 0; display: flex; align-items: center;">
+                                    <span style="width: 20px; height: 3px; background-color: rgba(210,89,229,1); margin-right: 8px;"></span>
+                                    <span>Département</span>
+                                </div>
+                                <div style="margin: 4px 0; display: flex; align-items: center;">
+                                    <span style="width: 20px; height: 3px; background-color: rgba(70,107,227,1); margin-right: 8px;"></span>
+                                    <span>Arrondissement</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Couches Données -->
+                        <div style="margin-bottom: 12px;">
+                            <p style="margin: 5px 0; font-size: 12px; font-weight: bold; color: #555;">Couches de Données :</p>
+                            <div style="margin-left: 8px; font-size: 12px;">
+                                <div style="margin: 4px 0; display: flex; align-items: center;">
+                                    <span style="width: 16px; height: 16px; background-color: rgba(84,176,74,1); border-radius: 50%; margin-right: 8px; border: 2px solid rgba(61,128,53,1);"></span>
+                                    <span>Écoles</span>
+                                </div>
+                                <div style="margin: 4px 0; display: flex; align-items: center;">
+                                    <span style="width: 12px; height: 12px; background-color: rgba(255,0,0,1); border-radius: 50%; margin-right: 8px;"></span>
+                                    <span>Localités</span>
+                                </div>
+                                <div style="margin: 4px 0; display: flex; align-items: center;">
+                                    <span style="width: 20px; height: 3px; background-color: rgba(227,26,28,1); margin-right: 8px; border: 1px dashed rgba(227,26,28,1);"></span>
+                                    <span>Routes</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <script>
+        // Modal management
+        function openModal(modalId) {
+            document.getElementById(modalId).classList.add('show');
+        }
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.classList.remove('show');
+            }
+        });
+        // Navigation menu event listeners
+        document.querySelector('a[href="#apropos"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal('modalAPropos');
+        });
+        document.querySelector('a[href="#requete-spatiale"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal('modalRequeteSpatiale');
+        });
+        document.querySelector('a[href="#requete-attributaire"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal('modalRequeteAttributaire');
+        });
+        document.querySelector('a[href="#telecharger"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            openModal('modalTelecharger');
+        });
+        
+        // Données des couches pour téléchargement
+        const donneesCouches = {
+            ecoles: {nom: 'Écoles', entites: 42, champs: 4, geomType: 'Point',  description: '<strong>Écoles de la région</strong><br>42 entités | Points | 4 champs attributaires'},
+            localites: {nom: 'Localités', entites: 156, champs: 3, geomType: 'Point', description: '<strong>Localités de Ziguinchor</strong><br>156 entités | Points | 3 champs attributaires'},
+            routes: {nom: 'Routes', entites: 127, champs: 5, geomType: 'LineString', description: '<strong>Réseau routier</strong><br>127 entités | Lignes | 5 champs attributaires'},
+            arrondissements: {nom: 'Arrondissements', entites: 8, champs: 2, geomType: 'Polygon', description: '<strong>Arrondissements administratifs</strong><br>8 entités | Polygones | 2 champs attributaires'},
+            departements: {nom: 'Départements', entites: 3, champs: 2, geomType: 'Polygon', description: '<strong>Départements de la région</strong><br>3 entités | Polygones | 2 champs attributaires'},
+            region: {nom: 'Région', entites: 1, champs: 2, geomType: 'Polygon', description: '<strong>Région de Ziguinchor</strong><br>1 entité | Polygone | 2 champs attributaires'}
+        };
+        
+        // Gestion des onglets du panneau droit
+        function switchRightTab(tabName) {
+            // Masquer all tabs
+            const allTabs = document.querySelectorAll('.panel-tab-content');
+            allTabs.forEach(tab => tab.classList.remove('active'));
+            
+            // Désactiver all buttons
+            const allButtons = document.querySelectorAll('.panel-tab-btn');
+            allButtons.forEach(btn => btn.classList.remove('active'));
+            
+            // Afficher le tab sélectionné
+            document.getElementById(tabName).classList.add('active');
+            
+            // Activer le bouton sélectionné
+            event.target.classList.add('active');
+        }
+        
+        // Gestion de la priorité des couches
+        function moveLayerUp(layerId) {
+            const container = event.target.closest('.layer-priority-item');
+            const prevItem = container.previousElementSibling;
+            if (prevItem && prevItem.classList.contains('layer-priority-item')) {
+                container.parentNode.insertBefore(container, prevItem);
+                console.log(`Couche '${layerId}' priorité augmentée`);
+            }
+        }
+        
+        function moveLayerDown(layerId) {
+            const container = event.target.closest('.layer-priority-item');
+            const nextItem = container.nextElementSibling;
+            if (nextItem && nextItem.classList.contains('layer-priority-item')) {
+                container.parentNode.insertBefore(nextItem, container);
+                console.log(`Couche '${layerId}' priorité diminuée`);
+            }
+        }
+        
+        // Champs attributaires par couche
+        const champsParlayer = {
+            ecoles: ['DESCRIPTIF', 'Nom', 'Code', 'Type'],
+            localites: ['NOM', 'X_UTM', 'Y_UTM', 'Population'],
+            routes: ['FONCTION', 'CODE', 'LONGUEUR', 'État'],
+            arrondissements: ['arr', 'Superficie', 'Population'],
+            departements: ['Dept', 'Région', 'Superficie'],
+            region: ['reg', 'Code', 'Altitude']
+        };
+        
+        // Gestion du changement de couche
+        document.addEventListener('DOMContentLoaded', function() {
+            const coucheSelect = document.getElementById('attributaire-couche');
+            const champSelect = document.getElementById('attributaire-champ');
+            const operateurSelect = document.getElementById('attributaire-operateur');
+            const valeur2Input = document.getElementById('attributaire-valeur2');
+            
+            if (coucheSelect) {
+                coucheSelect.addEventListener('change', function() {
+                    const selectedCouche = this.value;
+                    champSelect.innerHTML = '<option value="">-- Sélectionner un champ --</option>';
+                    
+                    if (selectedCouche && champsParlayer[selectedCouche]) {
+                        champsParlayer[selectedCouche].forEach(champ => {
+                            const option = document.createElement('option');
+                            option.value = champ;
+                            option.textContent = champ;
+                            champSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+            
+            if (operateurSelect) {
+                operateurSelect.addEventListener('change', function() {
+                    // Afficher le deuxième champ de valeur seulement pour "Entre"
+                    if (this.value === 'between') {
+                        valeur2Input.style.display = 'block';
+                        valeur2Input.required = true;
+                    } else {
+                        valeur2Input.style.display = 'none';
+                        valeur2Input.required = false;
+                    }
+                });
+            }
+            
+            // Gestion des couches du panneau gauche (Couches Administratives)
+            const layerCheckboxes = {
+                'layer-region': 'Région',
+                'layer-departement': 'Département',
+                'layer-arrondissement': 'Arrondissement',
+                'layer-ecoles': 'Écoles',
+                'layer-localites': 'Localités',
+                'layer-routes': 'Routes'
+            };
+            
+            Object.keys(layerCheckboxes).forEach(layerId => {
+                const checkbox = document.getElementById(layerId);
+                if (checkbox) {
+                    checkbox.addEventListener('change', function() {
+                        console.log(`Couche '${layerCheckboxes[layerId]}' ${this.checked ? 'affichée' : 'masquée'}`);
+                        // Les couches seront gérées avec Leaflet quand le script principal s'initialise
+                    });
+                }
+            });
+            
+            // Gestion des fonds de carte (Basemaps)
+            const basemapRadios = document.querySelectorAll('input[name="basemap"]');
+            basemapRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    console.log(`Fond de carte changé en: ${this.value}`);
+                    // Le changement de basemap sera géré avec Leaflet
+                });
+            });
+            
+            // Gestion du changement de couche pour téléchargement
+            const telechargerCoucheSelect = document.getElementById('telecharger-couche');
+            const telechargerInfo = document.getElementById('telecharger-info');
+            
+            if (telechargerCoucheSelect) {
+                telechargerCoucheSelect.addEventListener('change', function() {
+                    const selectedCouche = this.value;
+                    
+                    if (selectedCouche && donneesCouches[selectedCouche]) {
+                        const info = donneesCouches[selectedCouche];
+                        telechargerInfo.innerHTML = info.description;
+                    } else {
+                        telechargerInfo.innerHTML = '<p>Sélectionnez une couche pour afficher les détails</p>';
+                    }
+                });
+            }
+        });
+        
+        // Tab management for Spatial Queries
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.style.backgroundColor = '');
+            
+            // Show selected tab
+            const selectedTab = document.getElementById(tabName);
+            if (selectedTab) {
+                selectedTab.style.display = 'block';
+            }
+            
+            // Add active style to clicked button
+            event.target.style.backgroundColor = '#ecf0f1';
+        }
+        
+        // Data for zones and areas
+        const zoneData = {
+            communes: ['Ziguinchor', 'Bignona', 'Oussouye', 'Nyassia', 'Sindian', 'Tenghory'],
+            arrondissements: ['Cabrousse', 'Kataba I', 'Loudia Ouolof', 'Niaguis', 'Nyassia', 'Sindian', 'Tendouck', 'Tenghory'],
+            departements: ['Ziguinchor', 'Bignona', 'Oussouye']
+        };
+        
+        // Handle zone layer selection change
+        document.addEventListener('DOMContentLoaded', function() {
+            const zoneLayerSelect = document.getElementById('zone-layer');
+            const zoneValueSelect = document.getElementById('zone-value');
+            
+            if (zoneLayerSelect) {
+                zoneLayerSelect.addEventListener('change', function() {
+                    const selectedLayer = this.value;
+                    zoneValueSelect.innerHTML = '<option value="">-- Sélectionner une zone --</option>';
+                    
+                    if (selectedLayer && zoneData[selectedLayer]) {
+                        zoneData[selectedLayer].forEach(area => {
+                            const option = document.createElement('option');
+                            option.value = area;
+                            option.textContent = area;
+                            zoneValueSelect.appendChild(option);
+                        });
+                    }
+                });
+            }
+        });
+        
+        // Query execution functions
+        function executeZoneQuery() {
+            const layer = document.getElementById('zone-layer').value;
+            const zone = document.getElementById('zone-value').value;
+            const selectedLayers = Array.from(document.querySelectorAll('#tab-zone input[type="checkbox"]:checked')).map(cb => cb.value);
+            
+            if (!layer || !zone) {
+                alert('⚠️ Veuillez sélectionner une couche et une zone');
+                return;
+            }
+            
+            console.log('🔍 Requête par zone:', {layer, zone, selectedLayers});
+            alert(`✅ Requête exécutée!\n\nCouche: ${layer}\nZone: ${zone}\nCouches analysées: ${selectedLayers.join(', ') || 'aucune'}`);
+        }
+        
+        function executeProximiteQuery() {
+            const reference = document.getElementById('proximite-reference').value;
+            const distance = document.getElementById('proximite-distance').value;
+            const selectedObjects = Array.from(document.querySelectorAll('#tab-proximite input[type="checkbox"]:checked')).map(cb => cb.value);
+            
+            if (!reference) {
+                alert('⚠️ Veuillez sélectionner une référence');
+                return;
+            }
+            
+            console.log('🔍 Requête de proximité:', {reference, distance, selectedObjects});
+            alert(`✅ Requête exécutée!\n\nRéférence: ${reference}\nDistance: ${distance}m\nObjets recherchés: ${selectedObjects.join(', ') || 'aucun'}`);
+        }
+        
+        function executeOverlayQuery() {
+            const base = document.getElementById('overlay-base').value;
+            const selectedLayers = Array.from(document.querySelectorAll('#tab-overlay input[type="checkbox"]:checked')).map(cb => cb.value);
+            const intersection = document.querySelector('input[name="intersection"]:checked').value;
+            
+            if (!base) {
+                alert('⚠️ Veuillez sélectionner une couche de base');
+                return;
+            }
+            
+            console.log('🔍 Requête overlay:', {base, selectedLayers, intersection});
+            alert(`✅ Requête exécutée!\n\nCouche de base: ${base}\nType: ${intersection}\nCouches superposées: ${selectedLayers.join(', ') || 'aucune'}`);
+        }
+        
+        function executeBufferQuery() {
+            const source = document.getElementById('buffer-source').value;
+            const radius = document.getElementById('buffer-radius').value;
+            const selectedObjects = Array.from(document.querySelectorAll('#tab-buffer input[type="checkbox"]:checked')).map(cb => cb.value);
+            const style = document.querySelector('input[name="buffer-style"]:checked').value;
+            
+            if (!source) {
+                alert('⚠️ Veuillez sélectionner une couche source');
+                return;
+            }
+            
+            console.log('🔍 Requête buffer:', {source, radius, selectedObjects, style});
+            alert(`✅ Requête exécutée!\n\nSource: ${source}\nRayon: ${radius}m\nStyle: ${style}\nObjets inclus: ${selectedObjects.join(', ') || 'aucun'}`);
+        }
+        
+        function executeAttributaireQuery() {
+            const couche = document.getElementById('attributaire-couche').value;
+            const champ = document.getElementById('attributaire-champ').value;
+            const operateur = document.getElementById('attributaire-operateur').value;
+            const valeur1 = document.getElementById('attributaire-valeur1').value;
+            const valeur2 = document.getElementById('attributaire-valeur2').value;
+            const afficheCarte = document.getElementById('attributaire-carte').checked;
+            const afficheTableau = document.getElementById('attributaire-tableau').checked;
+            const highlight = document.getElementById('attributaire-highlight').checked;
+            
+            if (!couche || !champ || !operateur || !valeur1) {
+                alert('⚠️ Veuillez remplir tous les paramètres obligatoires');
+                return;
+            }
+            
+            if (operateur === 'between' && !valeur2) {
+                alert('⚠️ Veuillez entrer les deux valeurs pour "Entre"');
+                return;
+            }
+            
+            // Construction de la description de la requête
+            let descriptionOperateur = '';
+            let descriptionValeur = '';
+            
+            switch(operateur) {
+                case 'equal': descriptionOperateur = '='; descriptionValeur = valeur1; break;
+                case 'notequal': descriptionOperateur = '≠'; descriptionValeur = valeur1; break;
+                case 'contains': descriptionOperateur = 'contient'; descriptionValeur = valeur1; break;
+                case 'startswith': descriptionOperateur = 'commence par'; descriptionValeur = valeur1; break;
+                case 'greater': descriptionOperateur = '>'; descriptionValeur = valeur1; break;
+                case 'less': descriptionOperateur = '<'; descriptionValeur = valeur1; break;
+                case 'between': descriptionOperateur = 'entre'; descriptionValeur = `${valeur1} et ${valeur2}`; break;
+            }
+            
+            console.log('🔍 Requête attributaire:', {couche, champ, operateur, valeur1, valeur2});
+            
+            // Afficher les résultats simulés
+            const resultatsDiv = document.getElementById('attributaire-resultats');
+            const tableauBody = document.querySelector('#attributaire-tableau tbody');
+            
+            // Données simulées de résultats
+            const resultats = [
+                {id: 1, nom: 'Localité 1', champ: 'Valeur A'},
+                {id: 2, nom: 'Localité 2', champ: 'Valeur B'},
+                {id: 3, nom: 'Localité 3', champ: 'Valeur A'}
+            ];
+            
+            // Vider le tableau
+            tableauBody.innerHTML = '';
+            
+            // Remplir le tableau avec les résultats
+            resultats.forEach(resultat => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid #ddd';
+                tr.innerHTML = `
+                    <td style="padding: 8px; border: 1px solid #ddd;">${resultat.id}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">
+                        <strong>${champ}:</strong> ${resultat.champ}<br>
+                        <small>Couche: ${couche}</small>
+                    </td>
+                `;
+                tableauBody.appendChild(tr);
+            });
+            
+            // Afficher la section des résultats
+            resultatsDiv.style.display = 'block';
+            
+            // Message de confirmation
+            let message = `✅ Requête exécutée!\n\n`;
+            message += `Couche: ${couche}\n`;
+            message += `Champ: ${champ}\n`;
+            message += `Condition: ${champ} ${descriptionOperateur} ${descriptionValeur}\n`;
+            message += `\n📊 Résultats: ${resultats.length} entité(s) trouvée(s)`;
+            
+            if (afficheCarte) message += '\n✅ Affichage sur la carte';
+            if (afficheTableau) message += '\n✅ Affichage du tableau';
+            if (highlight) message += '\n✅ Mise en évidence activée';
+            
+            alert(message);
+        }
+        
+        function executeFiltrageQuery() {
+            const selectedLayers = Array.from(document.querySelectorAll('#tab-filtrage input[type="checkbox"]:checked')).map(cb => cb.value);
+            const zone = document.getElementById('filtrage-zone').value;
+            const autoUpdate = document.getElementById('filtrage-auto').checked;
+            
+            console.log('🔍 Filtrage dynamique:', {selectedLayers, zone, autoUpdate});
+            alert(`✅ Filtrage appliqué!\n\nCouches visibles: ${selectedLayers.join(', ')}\nZone: ${zone || 'Emprise actuelle'}\nMise à jour auto: ${autoUpdate ? 'Oui' : 'Non'}`);
+        }
+        
+        function executeTelecharger() {
+            const couche = document.getElementById('telecharger-couche').value;
+            const format = document.querySelector('input[name="telecharger-format"]:checked').value;
+            const filtreVisibles = document.getElementById('telecharger-filtre').checked;
+            const apercu = document.getElementById('telecharger-exemple').checked;
+            const compression = document.getElementById('telecharger-compression').checked;
+            
+            if (!couche) {
+                alert('⚠️ Veuillez sélectionner une couche');
+                return;
+            }
+            
+            const coucheInfo = donneesCouches[couche];
+            const formatMap = {
+                'geojson': '.geojson',
+                'shapefile': '.shp / .dbf / .shx',
+                'kml': '.kml',
+                'csv': '.csv'
+            };
+            
+            console.log('📥 Téléchargement:', {couche, format, filtreVisibles, compression});
+            
+            // Simulation du téléchargement
+            let message = `✅ Téléchargement en cours!\n\n`;
+            message += `📦 Fichier: ${coucheInfo.nom}${formatMap[format]}\n`;
+            message += `📊 Entités: ${coucheInfo.entites}\n`;
+            message += `🔷 Type géométrique: ${coucheInfo.geomType}\n`;
+            message += `📄 Format: ${format.toUpperCase()}\n`;
+            
+            if (filtreVisibles) {
+                message += `\n✅ Données visibles uniquement sélectionnées`;
+            }
+            
+            if (compression) {
+                message += `\n✅ Fichier compressé en ZIP`;
+                message += `\n📁 archivez_nom_fichier.zip`;
+            } else {
+                message += `\n📁 ${coucheInfo.nom.toLowerCase().replace(/\s+/g, '_')}.${format}`;
+            }
+            
+            message += `\n\n💾 Le fichier a été téléchargé avec succès!`;
+            message += `\n\n📖 Vous pouvez maintenant utiliser ces données dans:`;
+            message += `\n• QGIS`;
+            message += `\n• Google Earth (pour KML)`;
+            message += `\n• ArcGIS`;
+            message += `\n• LibreOffice / Excel (pour CSV)`;
+            message += `\n• Tout autre SIG ou application compatible`;
+            
+            alert(message);
+            
+            // Fermer la modale après 1 seconde
+            setTimeout(() => {
+                closeModal('modalTelecharger');
+            }, 500);
+        }
+        
+        </script>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/multi-style-layer.js"></script>
+        <script src="js/leaflet-svg-shape-markers.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet.photon.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="js/leaflet.markercluster.js"></script>
+        <script src="data/Rgion_3.js"></script>
+        <script src="data/Departement_4.js"></script>
+        <script src="data/Arrondissement_5.js"></script>
+        <script src="data/Routes_6.js"></script>
+        <script src="data/Localits_7.js"></script>
+        <script src="data/Ecoles_8.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString' || e.target.feature.geometry.type === 'MultiLineString') {
+              highlightLayer.setStyle({
+                color: 'rgba(255, 255, 0, 1.00)',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: 'rgba(255, 255, 0, 1.00)',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:20, minZoom:1
+        })
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // modify popup if contains media
+        function addClassToPopupIfMedia(content, popup) {
+            var tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            var imgTd = tempDiv.querySelector('td img');
+            if (imgTd) {
+                var src = imgTd.getAttribute('src');
+                if (/\.(jpg|jpeg|png|gif|bmp|webp|avif)$/i.test(src)) {
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp3|wav|ogg|aac)$/i.test(src)) {
+                    var audio = document.createElement('audio');
+                    audio.controls = true;
+                    audio.src = src;
+                    imgTd.parentNode.replaceChild(audio, imgTd);
+                    popup._contentNode.classList.add('media');
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else if (/\.(mp4|webm|ogg|mov)$/i.test(src)) {
+                    var video = document.createElement('video');
+                    video.controls = true;
+                    video.src = src;
+                    video.style.width = "400px";
+                    video.style.height = "300px";
+                    video.style.maxHeight = "60vh";
+                    video.style.maxWidth = "60vw";
+                    imgTd.parentNode.replaceChild(video, imgTd);
+                    popup._contentNode.classList.add('media');
+                    // Aggiorna il popup quando il video carica i metadati
+                    video.addEventListener('loadedmetadata', function() {
+                        popup.update();
+                    });
+                    setTimeout(function() {
+                        popup.setContent(tempDiv.innerHTML);
+                        popup.update();
+                    }, 10);
+                } else {
+                    popup._contentNode.classList.remove('media');
+                }
+            } else {
+                popup._contentNode.classList.remove('media');
+            }
+        }
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0].className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+            if (bounds_group.getLayers().length) {
+                map.fitBounds(bounds_group.getBounds());
+            }
+        }
+        map.createPane('pane_GoogleHybrid_0');
+        map.getPane('pane_GoogleHybrid_0').style.zIndex = 400;
+        var layer_GoogleHybrid_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleHybrid_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 20,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleHybrid_0;
+        map.addLayer(layer_GoogleHybrid_0);
+        map.createPane('pane_DarkMatter_1');
+        map.getPane('pane_DarkMatter_1').style.zIndex = 401;
+        var layer_DarkMatter_1 = L.tileLayer('https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', {
+            pane: 'pane_DarkMatter_1',
+            opacity: 1.0,
+            attribution: '<a href="https://cartodb.com/basemaps/">Map tiles by CartoDB, under CC BY 3.0. Data by OpenStreetMap, under ODbL.</a>',
+            minZoom: 1,
+            maxZoom: 20,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_DarkMatter_1;
+        map.addLayer(layer_DarkMatter_1);
+        map.createPane('pane_OpenStreetMap_2');
+        map.getPane('pane_OpenStreetMap_2').style.zIndex = 402;
+        var layer_OpenStreetMap_2 = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            pane: 'pane_OpenStreetMap_2',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 20,
+            minNativeZoom: 0,
+            maxNativeZoom: 19
+        });
+        layer_OpenStreetMap_2;
+        map.addLayer(layer_OpenStreetMap_2);
+        function pop_Rgion_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">reg</th>\
+                        <td>' + (feature.properties['reg'] !== null ? autolinker.link(String(feature.properties['reg']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Rgion_3_0() {
+            return {
+                pane: 'pane_Rgion_3',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 3.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(152,125,183,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Rgion_3');
+        map.getPane('pane_Rgion_3').style.zIndex = 403;
+        map.getPane('pane_Rgion_3').style['mix-blend-mode'] = 'normal';
+        var layer_Rgion_3 = new L.geoJson(json_Rgion_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Rgion_3',
+            layerName: 'layer_Rgion_3',
+            pane: 'pane_Rgion_3',
+            onEachFeature: pop_Rgion_3,
+            style: style_Rgion_3_0,
+        });
+        bounds_group.addLayer(layer_Rgion_3);
+        map.addLayer(layer_Rgion_3);
+        function pop_Departement_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Dept</th>\
+                        <td>' + (feature.properties['Dept'] !== null ? autolinker.link(String(feature.properties['Dept']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Departement_4_0(feature) {
+            switch(String(feature.properties['Dept'])) {
+                case 'BIGNONA':
+                    return {
+                pane: 'pane_Departement_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 4.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(210,89,229,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'OUSSOUYE':
+                    return {
+                pane: 'pane_Departement_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 4.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(15,138,215,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'ZIGUINCHOR':
+                    return {
+                pane: 'pane_Departement_4',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 4.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(112,234,96,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Departement_4');
+        map.getPane('pane_Departement_4').style.zIndex = 404;
+        map.getPane('pane_Departement_4').style['mix-blend-mode'] = 'normal';
+        var layer_Departement_4 = new L.geoJson(json_Departement_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Departement_4',
+            layerName: 'layer_Departement_4',
+            pane: 'pane_Departement_4',
+            onEachFeature: pop_Departement_4,
+            style: style_Departement_4_0,
+        });
+        bounds_group.addLayer(layer_Departement_4);
+        map.addLayer(layer_Departement_4);
+        function pop_Arrondissement_5(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">arr</th>\
+                        <td>' + (feature.properties['arr'] !== null ? autolinker.link(String(feature.properties['arr']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Arrondissement_5_0(feature) {
+            switch(String(feature.properties['arr'])) {
+                case 'CABROUSSE':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(48,18,59,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'KATABA I':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(70,107,227,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'LOUDIA OUOLOF':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(40,188,235,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'NIAGUIS':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(50,242,152,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'NYASSIA':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(164,252,60,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'SINDIAN':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,207,58,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'TENDOUCK':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(251,126,33,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'TENGHORY':
+                    return {
+                pane: 'pane_Arrondissement_5',
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(208,47,5,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Arrondissement_5');
+        map.getPane('pane_Arrondissement_5').style.zIndex = 405;
+        map.getPane('pane_Arrondissement_5').style['mix-blend-mode'] = 'normal';
+        var layer_Arrondissement_5 = new L.geoJson(json_Arrondissement_5, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Arrondissement_5',
+            layerName: 'layer_Arrondissement_5',
+            pane: 'pane_Arrondissement_5',
+            onEachFeature: pop_Arrondissement_5,
+            style: style_Arrondissement_5_0,
+        });
+        bounds_group.addLayer(layer_Arrondissement_5);
+        map.addLayer(layer_Arrondissement_5);
+        function pop_Routes_6(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FNODE_'] !== null ? autolinker.link(String(feature.properties['FNODE_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['TNODE_'] !== null ? autolinker.link(String(feature.properties['TNODE_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LPOLY_'] !== null ? autolinker.link(String(feature.properties['LPOLY_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['RPOLY_'] !== null ? autolinker.link(String(feature.properties['RPOLY_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['LONGUEUR'] !== null ? autolinker.link(String(feature.properties['LONGUEUR']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ROUTESA3_'] !== null ? autolinker.link(String(feature.properties['ROUTESA3_']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['ROUTESA3_I'] !== null ? autolinker.link(String(feature.properties['ROUTESA3_I']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CODE'] !== null ? autolinker.link(String(feature.properties['CODE']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['FONCTION'] !== null ? autolinker.link(String(feature.properties['FONCTION']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Routes_6_0() {
+            return {
+                pane: 'pane_Routes_6',
+                opacity: 1,
+                color: 'rgba(227,26,28,1.0)',
+                dashArray: '8.0,4.0,2.0,4.0',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 2.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Routes_6');
+        map.getPane('pane_Routes_6').style.zIndex = 406;
+        map.getPane('pane_Routes_6').style['mix-blend-mode'] = 'normal';
+        var layer_Routes_6 = new L.geoJson(json_Routes_6, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Routes_6',
+            layerName: 'layer_Routes_6',
+            pane: 'pane_Routes_6',
+            onEachFeature: pop_Routes_6,
+            style: style_Routes_6_0,
+        });
+        bounds_group.addLayer(layer_Routes_6);
+        map.addLayer(layer_Routes_6);
+        function pop_Localits_7(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">NOM</th>\
+                        <td>' + (feature.properties['NOM'] !== null ? autolinker.link(String(feature.properties['NOM']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">X_UTM</th>\
+                        <td>' + (feature.properties['X_UTM'] !== null ? autolinker.link(String(feature.properties['X_UTM']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">Y_UTM</th>\
+                        <td>' + (feature.properties['Y_UTM'] !== null ? autolinker.link(String(feature.properties['Y_UTM']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Localits_7_0() {
+            return {
+                pane: 'pane_Localits_7',
+                radius: 6.23334,
+                opacity: 1,
+                color: 'rgba(184,8,8,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(184,8,8,1.0)',
+                interactive: true,
+            }
+        }
+        function style_Localits_7_1() {
+            return {
+                pane: 'pane_Localits_7',
+                radius: 6.8,
+                opacity: 1,
+                color: 'rgba(255,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,0,0,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Localits_7');
+        map.getPane('pane_Localits_7').style.zIndex = 407;
+        map.getPane('pane_Localits_7').style['mix-blend-mode'] = 'normal';
+        var layer_Localits_7 = new L.geoJson.multiStyle(json_Localits_7, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Localits_7',
+            layerName: 'layer_Localits_7',
+            pane: 'pane_Localits_7',
+            onEachFeature: pop_Localits_7,
+            pointToLayers: [function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Localits_7_0(feature));
+            },function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Localits_7_1(feature));
+            },
+        ]});
+        var cluster_Localits_7 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Localits_7.addLayer(layer_Localits_7);
+
+        bounds_group.addLayer(layer_Localits_7);
+        cluster_Localits_7.addTo(map);
+        function pop_Ecoles_8(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (var i in e.target._eventParents) {
+                        if (typeof e.target._eventParents[i].resetStyle === 'function') {
+                            e.target._eventParents[i].resetStyle(e.target);
+                        }
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">DESCRIPTIF</th>\
+                        <td>' + (feature.properties['DESCRIPTIF'] !== null ? autolinker.link(String(feature.properties['DESCRIPTIF']).replace(/'/g, '\'').toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Ecoles_8_0() {
+            return {
+                pane: 'pane_Ecoles_8',
+                shape: 'triangle',
+                radius: 8.0,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,176,74,1.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_Ecoles_8');
+        map.getPane('pane_Ecoles_8').style.zIndex = 408;
+        map.getPane('pane_Ecoles_8').style['mix-blend-mode'] = 'normal';
+        var layer_Ecoles_8 = new L.geoJson(json_Ecoles_8, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Ecoles_8',
+            layerName: 'layer_Ecoles_8',
+            pane: 'pane_Ecoles_8',
+            onEachFeature: pop_Ecoles_8,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.shapeMarker(latlng, style_Ecoles_8_0(feature));
+            },
+        });
+        var cluster_Ecoles_8 = new L.MarkerClusterGroup({showCoverageOnHover: false,
+            spiderfyDistanceMultiplier: 2});
+        cluster_Ecoles_8.addLayer(layer_Ecoles_8);
+
+        bounds_group.addLayer(layer_Ecoles_8);
+        cluster_Ecoles_8.addTo(map);
+        const url = {"Nominatim OSM": "https://nominatim.openstreetmap.org/search?format=geojson&addressdetails=1&",
+        "France BAN": "https://api-adresse.data.gouv.fr/search/?"}
+        var photonControl = L.control.photon({
+            url: url["Nominatim OSM"],
+            feedbackLabel: '',
+            position: 'topleft',
+            includePosition: true,
+            initial: true,
+            // resultsHandler: myHandler,
+        }).addTo(map);
+        photonControl._container.childNodes[0].style.borderRadius="10px"
+        // Create a variable to store the geoJSON data
+        var x = null;
+        // Create a variable to store the marker
+        var marker = null;
+        // Add an event listener to the Photon control to create a marker from the returned geoJSON data
+        var z = null;
+        photonControl.on('selected', function(e) {
+            console.log(photonControl.search.resultsContainer);
+            if (x != null) {
+                map.removeLayer(obj3.marker);
+                map.removeLayer(x);
+            }
+            obj2.gcd = e.choice;
+            x = L.geoJSON(obj2.gcd).addTo(map);
+            var label = typeof obj2.gcd.properties.label === 'undefined' ? obj2.gcd.properties.display_name : obj2.gcd.properties.label;
+            obj3.marker = L.marker(x.getLayers()[0].getLatLng()).bindPopup(label).addTo(map);
+            map.setView(x.getLayers()[0].getLatLng(), 17);
+            z = typeof e.choice.properties.label === 'undefined'? e.choice.properties.display_name : e.choice.properties.label;
+            console.log(e);
+            e.target.input.value = z;
+        });
+        var search = document.getElementsByClassName("leaflet-photon leaflet-control")[0];
+        search.classList.add("leaflet-control-search")
+        search.style.display = "flex";
+        search.style.backgroundColor="rgba(255,255,255,0.5)" 
+
+        // Create the new button element
+        var button = document.createElement("div");
+        button.id = "gcd-button-control";
+        button.className = "gcd-gl-btn fa fa-search search-button";
+
+        // Insert the button at the beginning of the search control
+        search.insertBefore(button, search.firstChild);
+        last = search.lastChild;
+        last.style.display = "none";
+        button.addEventListener("click", function (e) {
+            if (last.style.display === "none") {
+                last.style.display = "block";
+            } else {
+                last.style.display = "none";
+            }
+        });
+        var overlaysTree = [
+            {label: '<img src="legend/Ecoles_8.png" /> Ecoles', layer: cluster_Ecoles_8},
+            {label: '<img src="legend/Localits_7.png" /> Localités', layer: cluster_Localits_7},
+            {label: '<img src="legend/Routes_6.png" /> Routes', layer: layer_Routes_6},
+            {label: 'Arrondissement<br /><table><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_CABROUSSE0.png" /></td><td>CABROUSSE</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_KATABAI1.png" /></td><td>KATABA I</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_LOUDIAOUOLOF2.png" /></td><td>LOUDIA OUOLOF</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_NIAGUIS3.png" /></td><td>NIAGUIS</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_NYASSIA4.png" /></td><td>NYASSIA</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_SINDIAN5.png" /></td><td>SINDIAN</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_TENDOUCK6.png" /></td><td>TENDOUCK</td></tr><tr><td style="text-align: center;"><img src="legend/Arrondissement_5_TENGHORY7.png" /></td><td>TENGHORY</td></tr></table>', layer: layer_Arrondissement_5},
+            {label: 'Departement<br /><table><tr><td style="text-align: center;"><img src="legend/Departement_4_BIGNONA0.png" /></td><td>BIGNONA</td></tr><tr><td style="text-align: center;"><img src="legend/Departement_4_OUSSOUYE1.png" /></td><td>OUSSOUYE</td></tr><tr><td style="text-align: center;"><img src="legend/Departement_4_ZIGUINCHOR2.png" /></td><td>ZIGUINCHOR</td></tr></table>', layer: layer_Departement_4},
+            {label: '<img src="legend/Rgion_3.png" /> Région', layer: layer_Rgion_3},
+            {label: "OpenStreetMap", layer: layer_OpenStreetMap_2, radioGroup: 'bm' },
+            {label: "Dark Matter", layer: layer_DarkMatter_1, radioGroup: 'bm' },
+            {label: "Google Hybrid", layer: layer_GoogleHybrid_0, radioGroup: 'bm' },]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: false, 
+        });
+        lay.addTo(map);
+		document.addEventListener("DOMContentLoaded", function() {
+            // set new Layers List height which considers toggle icon
+            function newLayersListHeight() {
+                var layerScrollbarElement = document.querySelector('.leaflet-control-layers-scrollbar');
+                if (layerScrollbarElement) {
+                    var layersListElement = document.querySelector('.leaflet-control-layers-list');
+                    var originalHeight = layersListElement.style.height 
+                        || window.getComputedStyle(layersListElement).height;
+                    var newHeight = parseFloat(originalHeight) - 50;
+                    layersListElement.style.height = newHeight + 'px';
+                }
+            }
+            var isLayersListExpanded = true;
+            var controlLayersElement = document.querySelector('.leaflet-control-layers');
+            var toggleLayerControl = document.querySelector('.leaflet-control-layers-toggle');
+            // toggle Collapsed/Expanded and apply new Layers List height
+            toggleLayerControl.addEventListener('click', function() {
+                if (isLayersListExpanded) {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                } else {
+                    controlLayersElement.classList.add('leaflet-control-layers-expanded');
+                }
+                isLayersListExpanded = !isLayersListExpanded;
+                newLayersListHeight()
+            });	
+			// apply new Layers List height if toggle layerstree
+			if (controlLayersElement) {
+				controlLayersElement.addEventListener('click', function(event) {
+					var toggleLayerHeaderPointer = event.target.closest('.leaflet-layerstree-header-pointer span');
+					if (toggleLayerHeaderPointer) {
+						newLayersListHeight();
+					}
+				});
+			}
+            // Collapsed/Expanded at Start to apply new height
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            setTimeout(function() {
+                toggleLayerControl.click();
+            }, 10);
+            // Collapsed touch/small screen
+            var isSmallScreen = window.innerWidth < 650;
+            if (isSmallScreen) {
+                setTimeout(function() {
+                    controlLayersElement.classList.remove('leaflet-control-layers-expanded');
+                    isLayersListExpanded = !isLayersListExpanded;
+                }, 500);
+            }  
+        });       
+        setBounds();
+        var i = 0;
+        layer_Departement_4.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['Dept'] !== null?String('<div style="color: #e31a1c; font-size: 10pt; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['Dept']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Departement_4'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        var i = 0;
+        layer_Arrondissement_5.eachLayer(function(layer) {
+            var context = {
+                feature: layer.feature,
+                variables: {}
+            };
+            layer.bindTooltip((layer.feature.properties['arr'] !== null?String('<div style="color: #323232; font-size: 10pt; font-weight: bold; font-family: \'Times New Roman\', sans-serif;">' + layer.feature.properties['arr']) + '</div>':''), {permanent: true, offset: [-0, -16], className: 'css_Arrondissement_5'});
+            labels.push(layer);
+            totalMarkers += 1;
+              layer.added = true;
+              addLabel(layer, i);
+              i++;
+        });
+        resetLabels([layer_Departement_4,layer_Arrondissement_5]);
+        map.on("zoomend", function(){
+            resetLabels([layer_Departement_4,layer_Arrondissement_5]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_Departement_4,layer_Arrondissement_5]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_Departement_4,layer_Arrondissement_5]);
+        });
+        </script>
+    </body>
+</html>
