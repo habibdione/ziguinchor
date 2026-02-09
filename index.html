@@ -1,26 +1,26 @@
 <!doctype html>
-<html lang="en">
+<html lang="fr">
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="viewport" content="initial-scale=1, viewport-fit=cover, user-scalable=yes, width=device-width">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="GeoZiguinchor">
         <meta name="theme-color" content="#2c3e50">
-        <meta name="description" content="Application cartographique interactive de Ziguinchor avec géolocalisation et accès offline">
-        <meta name="keywords" content="carte, cartographie, Ziguinchor, Sénégal, géolocalisation, PWA">
-        <meta name="author" content="GeoZiguinchor Team">
+        <meta name="description" content="🗺️ Carte interactive de Ziguinchor - Géolocalisation GPS, navigation offline, accès complet sans internet">
+        <meta name="keywords" content="carte, cartographie, Ziguinchor, Sénégal, géolocalisation, PWA, offline, navigation">
+        <meta name="author" content="GeoZiguinchor">
         
-        <!-- PWA Manifest -->
-        <link rel="manifest" href="./manifest.json">
+        <!-- PWA Manifest - GitHub Pages compatible -->
+        <link rel="manifest" href="/ziguinchor/manifest.json">
         
         <!-- Apple Web App Icons -->
-        <link rel="apple-touch-icon" href="./images/icon-180x180.png">
-        <link rel="icon" type="image/png" sizes="32x32" href="./images/icon-32x32.png">
-        <link rel="icon" type="image/png" sizes="16x16" href="./images/icon-16x16.png">
-        <link rel="icon" type="image/png" sizes="192x192" href="./images/icon-192x192.png">
+        <link rel="apple-touch-icon" href="/ziguinchor/images/icon-180x180.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="/ziguinchor/images/icon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="/ziguinchor/images/icon-16x16.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="/ziguinchor/images/icon-192x192.png">
         
         <!-- Stylesheets -->
         <link rel="stylesheet" href="css/leaflet.css">
@@ -32,6 +32,7 @@
         <link rel="stylesheet" href="css/MarkerCluster.Default.css">
         <link rel="stylesheet" href="css/leaflet.photon.css">
         <link rel="stylesheet" href="css/leaflet-measure.css">
+        <link rel="stylesheet" href="/ziguinchor/css/pwa-ui.css">
         <style>
         body {
             margin: 0;
@@ -2251,6 +2252,7 @@
                 });
             }
         }
-        </script>
+        <!-- PWA Manager - Complete geolocation, installation and service worker handling -->
+        <script src="/ziguinchor/js/pwa-manager.js"></script>
     </body>
 </html>

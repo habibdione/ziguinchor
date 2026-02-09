@@ -1,74 +1,77 @@
-// Service Worker for GeoZiguinchor PWA
-// Version: 2.0.0
-const CACHE_VERSION = 'v2.0.0';
-const CACHE_NAME = `geoziguinchor-${CACHE_VERSION}`;
-const DATA_CACHE = `geoziguinchor-data-${CACHE_VERSION}`;
-const OFFLINE_PAGE = './index.html';
+// GeoZiguinchor Service Worker v3.0.0
+// Optimized for Leaflet map tiles with GitHub Pages deployment
+// Features: Stale While Revalidate for tiles, Offline-first, Background Sync
 
-// Core static assets to cache
+const CACHE_VERSION = 'v3.0.0';
+const MAP_TILES_CACHE = `geoziguinchor-tiles-${CACHE_VERSION}`;
+const STATIC_CACHE = `geoziguinchor-static-${CACHE_VERSION}`;
+const DATA_CACHE = `geoziguinchor-data-${CACHE_VERSION}`;
+const GITHUB_PAGES_PREFIX = '/ziguinchor';
+
+// Static assets to precache
 const STATIC_ASSETS = [
-    './',
-    './index.html',
-    './manifest.json',
-    './css/app.css',
-    './css/leaflet.css',
-    './css/L.Control.Layers.Tree.css',
-    './css/L.Control.Locate.min.css',
-    './css/qgis2web.css',
-    './css/fontawesome-all.min.css',
-    './css/MarkerCluster.css',
-    './css/MarkerCluster.Default.css',
-    './css/leaflet.photon.css',
-    './css/leaflet-measure.css',
-    './js/app.js',
-    './js/leaflet.js',
-    './js/L.Control.Layers.Tree.min.js',
-    './js/L.Control.Locate.min.js',
-    './js/multi-style-layer.js',
-    './js/leaflet-svg-shape-markers.min.js',
-    './js/leaflet.rotatedMarker.js',
-    './js/leaflet.pattern.js',
-    './js/leaflet-hash.js',
-    './js/Autolinker.min.js',
-    './js/rbush.min.js',
-    './js/labelgun.min.js',
-    './js/labels.js',
-    './js/leaflet.photon.js',
-    './js/leaflet-measure.js',
-    './js/leaflet.markercluster.js',
-    './js/qgis2web_expressions.js'
+    '/ziguinchor/',
+    '/ziguinchor/index.html',
+    '/ziguinchor/manifest.json',
+    '/ziguinchor/css/app.css',
+    '/ziguinchor/css/leaflet.css',
+    '/ziguinchor/css/pwa-ui.css',
+    '/ziguinchor/css/L.Control.Layers.Tree.css',
+    '/ziguinchor/css/L.Control.Locate.min.css',
+    '/ziguinchor/css/qgis2web.css',
+    '/ziguinchor/css/fontawesome-all.min.css',
+    '/ziguinchor/css/MarkerCluster.css',
+    '/ziguinchor/css/MarkerCluster.Default.css',
+    '/ziguinchor/css/leaflet.photon.css',
+    '/ziguinchor/css/leaflet-measure.css',
+    '/ziguinchor/js/app.js',
+    '/ziguinchor/js/leaflet.js',
+    '/ziguinchor/js/pwa-manager.js',
+    '/ziguinchor/js/L.Control.Layers.Tree.min.js',
+    '/ziguinchor/js/L.Control.Locate.min.js',
+    '/ziguinchor/js/multi-style-layer.js',
+    '/ziguinchor/js/leaflet-svg-shape-markers.min.js',
+    '/ziguinchor/js/leaflet.rotatedMarker.js',
+    '/ziguinchor/js/leaflet.pattern.js',
+    '/ziguinchor/js/leaflet-hash.js',
+    '/ziguinchor/js/Autolinker.min.js',
+    '/ziguinchor/js/rbush.min.js',
+    '/ziguinchor/js/labelgun.min.js',
+    '/ziguinchor/js/labels.js',
+    '/ziguinchor/js/leaflet.photon.js',
+    '/ziguinchor/js/leaflet-measure.js',
+    '/ziguinchor/js/leaflet.markercluster.js',
+    '/ziguinchor/js/qgis2web_expressions.js'
 ];
 
-// Install Service Worker - Cache essential assets
+// INSTALL EVENT - Cache essential assets
 self.addEventListener('install', (event) => {
-    console.log('GeoZiguinchor SW: Installing version', CACHE_VERSION);
+    console.log('🔨 GeoZiguinchor SW v3.0.0: Installing...');
     event.waitUntil(
-        caches.open(CACHE_NAME)
+        caches.open(STATIC_CACHE)
             .then((cache) => {
-                console.log('GeoZiguinchor SW: Caching', STATIC_ASSETS.length, 'static assets');
-                // Cache with ignoreErrors to avoid failing on missing assets
+                console.log('📦 Caching', STATIC_ASSETS.length, 'static assets...');
                 return cache.addAll(STATIC_ASSETS).catch((error) => {
-                    console.warn('GeoZiguinchor SW: Some assets failed to cache:', error);
-                    // Continue even if some assets fail
+                    console.warn('⚠️ Some assets failed to cache:', error);
                     return Promise.resolve();
                 });
             })
             .catch((error) => {
-                console.error('GeoZiguinchor SW: Cache open failed:', error);
+                console.error('❌ Cache open failed:', error);
             })
     );
     self.skipWaiting();
 });
 
-// Activate Service Worker - Clean up old caches
+// ACTIVATE EVENT - Clean up old caches
 self.addEventListener('activate', (event) => {
-    console.log('GeoZiguinchor SW: Activating...');
+    console.log('✅ GeoZiguinchor SW: Activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (!cacheName.includes(CACHE_VERSION)) {
-                        console.log('GeoZiguinchor SW: Deleting old cache:', cacheName);
+                    if (!cacheName.includes(CACHE_VERSION) && cacheName.includes('geoziguinchor')) {
+                        console.log('🗑️ Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -78,7 +81,7 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch Event - Intelligent caching strategy
+// FETCH EVENT - Intelligent cache strategies
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     
@@ -89,32 +92,45 @@ self.addEventListener('fetch', (event) => {
     
     const url = new URL(request.url);
     
-    // Handle API/data requests (Network First, Cache Fallback)
-    if (url.pathname.includes('/data/') || url.pathname.includes('.js?')) {
+    // Detect if this is a map tile request
+    if (isTileRequest(url)) {
+        // Stale While Revalidate for tiles (fast response + background update)
+        event.respondWith(cacheTilesStale(request));
+        return;
+    }
+    
+    // Static assets - Cache First
+    if (isStaticAsset(request, url)) {
+        event.respondWith(cacheFirst(request));
+        return;
+    }
+    
+    // Data/API requests - Network First
+    if (isDataRequest(url)) {
         event.respondWith(networkFirst(request));
         return;
     }
     
-    // Handle images (Cache First, Network Fallback)
-    if (request.destination === 'image') {
-        event.respondWith(cacheFirst(request));
-        return;
-    }
-    
-    // Handle static assets (Cache First)
-    if (request.destination === 'style' || request.destination === 'script' || 
-        url.pathname.endsWith('.css') || url.pathname.endsWith('.js') ||
-        url.pathname.endsWith('.woff') || url.pathname.endsWith('.woff2') ||
-        url.pathname.endsWith('.ttf') || url.pathname.endsWith('.eot')) {
-        event.respondWith(cacheFirst(request));
-        return;
-    }
-    
-    // Default strategy for HTML and other (Network First)
+    // Default: Network First with fallback
     event.respondWith(networkFirst(request));
 });
 
-// Cache First Strategy
+// **STALE WHILE REVALIDATE** - For map tiles (optimal for perceived performance)
+async function cacheTilesStale(request) {
+    const cache = await caches.open(MAP_TILES_CACHE);
+    const cached = await cache.match(request);
+    
+    const fetchPromise = fetch(request).then((response) => {
+        if (response && response.status === 200) {
+            cache.put(request, response.clone());
+        }
+        return response;
+    }).catch(() => cached || offlineResponse());
+    
+    return cached || fetchPromise;
+}
+
+// **CACHE FIRST** - For static assets
 async function cacheFirst(request) {
     const cached = await caches.match(request);
     if (cached) {
@@ -124,38 +140,151 @@ async function cacheFirst(request) {
     try {
         const response = await fetch(request);
         if (response && response.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
+            const cache = await caches.open(STATIC_CACHE);
             cache.put(request, response.clone());
         }
         return response;
     } catch (error) {
-        console.warn('GeoZiguinchor SW: Fetch failed for', request.url, error);
-        return caches.match('./index.html');
+        console.warn('⚠️ Fetch failed:', request.url);
+        return offlineResponse();
     }
 }
 
-// Network First Strategy
+// **NETWORK FIRST** - For data and HTML
 async function networkFirst(request) {
     try {
         const response = await fetch(request);
         if (response && response.status === 200) {
-            const cache = await caches.open(CACHE_NAME);
+            const cache = await caches.open(DATA_CACHE);
             cache.put(request, response.clone());
         }
         return response;
     } catch (error) {
-        console.warn('GeoZiguinchor SW: Network request failed for', request.url);
+        console.warn('⚠️ Network request failed:', request.url);
         const cached = await caches.match(request);
         if (cached) {
             return cached;
         }
-        return caches.match('./index.html');
+        
+        // Fallback to cached index.html
+        if (request.headers.get('accept')?.includes('text/html')) {
+            return caches.match('/ziguinchor/index.html');
+        }
+        
+        return offlineResponse();
     }
 }
 
-// Background Sync for offline actions
+// Check if URL is a map tile request
+function isTileRequest(url) {
+    const tilePatterns = [
+        'tile.openstreetmap.org',
+        'tiles.openstreetmap.org',
+        'maps.googleapis.com',
+        'a.tile.opentopomap.org',
+        'b.tile.opentopomap.org',
+        'c.tile.opentopomap.org',
+        'cartodb',
+        'stamen',
+        'esri',
+        'thunderforest',
+        '.tile.',
+        'tileset'
+    ];
+    
+    const urlStr = url.href.toLowerCase();
+    const isTile = tilePatterns.some(pattern => urlStr.includes(pattern));
+    
+    // Also check file extensions
+    const isTileFile = url.pathname.match(/\.(png|jpg|jpeg|webp)$/i);
+    
+    return isTile || (isTileFile && !url.hostname.includes('github'));
+}
+
+// Check if request is for static assets
+function isStaticAsset(request, url) {
+    const staticExts = ['.css', '.js', '.woff', '.woff2', '.ttf', '.eot', '.svg', '.json'];
+    const path = url.pathname.toLowerCase();
+    
+    if (request.destination === 'style' || request.destination === 'script' || request.destination === 'font') {
+        return true;
+    }
+    
+    return staticExts.some(ext => path.endsWith(ext));
+}
+
+// Check if request is for data/API
+function isDataRequest(url) {
+    const path = url.pathname.toLowerCase();
+    return path.includes('/data/') || path.endsWith('.geojson') || path.endsWith('.json');
+}
+
+// Offline fallback response
+function offlineResponse() {
+    return new Response(
+        '<html><body><h1>📶 Offline</h1><p>Les données ne sont pas disponibles hors ligne.</p></body></html>',
+        {
+            headers: { 'Content-Type': 'text/html' },
+            status: 503
+        }
+    );
+}
+
+// MESSAGE HANDLING - Receive commands from app
+self.addEventListener('message', (event) => {
+    console.log('📨 SW Message:', event.data);
+    
+    // Skip waiting for immediate update
+    if (event.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
+    
+    // Cache tiles from app request
+    if (event.data.type === 'CACHE_TILES') {
+        event.waitUntil(
+            cacheTilesFromUrls(event.data.urls)
+                .then(() => {
+                    event.ports[0]?.postMessage({ success: true, cached: event.data.urls.length });
+                })
+        );
+    }
+    
+    // Clear all caches
+    if (event.data.type === 'CLEAR_CACHE') {
+        event.waitUntil(
+            caches.keys().then((names) => {
+                return Promise.all(names.map(name => caches.delete(name)));
+            }).then(() => {
+                event.ports[0]?.postMessage({ success: true });
+            })
+        );
+    }
+});
+
+// Cache multiple tiles
+async function cacheTilesFromUrls(urls) {
+    try {
+        const cache = await caches.open(MAP_TILES_CACHE);
+        const requests = urls.map(url => new Request(url, { mode: 'no-cors' }));
+        
+        for (const request of requests) {
+            try {
+                const response = await fetch(request);
+                if (response && response.status === 200) {
+                    await cache.put(request, response);
+                }
+            } catch (e) {
+                console.warn('Failed to cache tile:', request.url);
+            }
+        }
+    } catch (error) {
+        console.error('Error caching tiles:', error);
+    }
+}
+
+// BACKGROUND SYNC - Sync location data when back online
 self.addEventListener('sync', (event) => {
-    console.log('GeoZiguinchor SW: Background sync event:', event.tag);
+    console.log('🔄 Background Sync:', event.tag);
     if (event.tag === 'sync-location-data') {
         event.waitUntil(syncLocationData());
     }
@@ -163,76 +292,47 @@ self.addEventListener('sync', (event) => {
 
 async function syncLocationData() {
     try {
-        // Placeholder for syncing location data when back online
-        console.log('GeoZiguinchor SW: Syncing location data...');
+        console.log('📍 Syncing location data...');
+        // Implement location sync logic here
         return Promise.resolve();
     } catch (error) {
-        console.error('GeoZiguinchor SW: Sync failed:', error);
+        console.error('❌ Sync failed:', error);
         return Promise.reject(error);
     }
 }
 
-// Handle messages from the client
-self.addEventListener('message', (event) => {
-    console.log('GeoZiguinchor SW: Message received:', event.data);
-    
-    if (event.data && event.data.type === 'SKIP_WAITING') {
-        self.skipWaiting();
-    }
-    
-    if (event.data && event.data.type === 'CLEAR_CACHE') {
-        event.waitUntil(
-            caches.delete(CACHE_NAME).then(() => {
-                event.ports[0].postMessage({ success: true });
-            })
-        );
-    }
-    
-    if (event.data && event.data.type === 'CACHE_URLS') {
-        event.waitUntil(
-            caches.open(CACHE_NAME).then((cache) => {
-                return cache.addAll(event.data.urls).then(() => {
-                    event.ports[0].postMessage({ cached: event.data.urls.length });
-                });
-            })
-        );
-    }
-});
-
-// Push notifications
+// PUSH NOTIFICATIONS
 self.addEventListener('push', (event) => {
     const data = event.data ? event.data.json() : {};
     const options = {
         body: data.body || 'Nouvelle notification GeoZiguinchor',
-        icon: './images/icon-192x192.png',
-        badge: './images/icon-96x96.png',
+        icon: '/ziguinchor/images/icon-192x192.png',
+        badge: '/ziguinchor/images/icon-96x96.png',
         tag: 'geoziguinchor-notification',
         requireInteraction: data.requireInteraction || false,
         data: data.data || {}
     };
     
     event.waitUntil(
-        self.registration.showNotification(data.title || 'GeoZiguinchor', options)
+        self.registration.showNotification(data.title || 'GeoZiguinchor 🗺️', options)
     );
 });
 
-// Notification click handler
+// NOTIFICATION CLICK HANDLER
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(
         clients.matchAll({ type: 'window' }).then((clientList) => {
-            // Find existing window
             for (let client of clientList) {
-                if (client.url === self.registration.scope && 'focus' in client) {
+                if (client.url.includes('/ziguinchor/') && 'focus' in client) {
                     return client.focus();
                 }
             }
-            // Or open a new window
             if (clients.openWindow) {
-                return clients.openWindow('./index.html');
+                return clients.openWindow('/ziguinchor/index.html');
             }
         })
     );
 });
 
-console.log('GeoZiguinchor Service Worker loaded');
+console.log('✅ GeoZiguinchor Service Worker v3.0.0 loaded: Ready for offline mapping!');
