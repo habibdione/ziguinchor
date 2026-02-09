@@ -60,6 +60,16 @@
             text-decoration: none;
             margin-right: auto;
         }
+        .navbar-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px 15px;
+            margin-left: 10px;
+        }
         .navbar-menu {
             display: flex;
             margin: 0;
@@ -349,18 +359,58 @@
 
         /* Mobile devices (max-width: 768px) */
         @media (max-width: 768px) {
+            .navbar-hamburger {
+                display: block;
+                margin-right: auto;
+                margin-left: 10px;
+                order: -1;
+            }
+
             .mobile-menu-btn {
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
 
+            .navbar {
+                flex-wrap: wrap;
+                overflow: visible;
+            }
+
             .navbar-menu {
-                display: none !important;
+                position: fixed;
+                top: 60px;
+                left: 0;
+                right: 0;
+                flex-direction: column;
+                background-color: #27ae60;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+                margin: 0;
+                padding: 0;
+                list-style: none;
+                z-index: 250;
+                width: 100%;
+            }
+
+            .navbar-menu.mobile-open {
+                max-height: 500px;
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            }
+
+            .navbar-menu a {
+                padding: 15px 20px;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .navbar-menu a:hover {
+                background-color: #229954;
             }
 
             .container-main {
                 height: calc(100vh - 60px);
+                margin-top: 0;
             }
 
             .panel-left {
@@ -490,16 +540,16 @@
         <!-- Navigation Bar -->
         <nav class="navbar">
             <a href="#" class="navbar-brand">🗺️ GeoZiguinchor</a>
-            <ul class="navbar-menu">
+            <ul class="navbar-menu" id="navbarMenu">
                 <li><a href="#accueil" class="nav-link active">Accueil</a></li>
                 <li><a href="#apropos" class="nav-link">À propos</a></li>
                 <li><a href="#requete-spatiale" class="nav-link">Requête Spatiale</a></li>
                 <li><a href="#requete-attributaire" class="nav-link">Requête Attributaire</a></li>
                 <li><a href="#telecharger" class="nav-link">Télécharger Données</a></li>
             </ul>
-            <!-- Mobile Menu Buttons -->
-            <button class="mobile-menu-btn" id="toggleLeftPanel" title="Afficher les couches administratives">☰</button>
-            <button class="mobile-menu-btn" id="toggleRightPanel" title="Afficher les couches et fonds de carte">⚙️</button>
+            <!-- Mobile Menu Toggle Buttons -->
+            <button class="mobile-menu-btn" id="toggleNavMenu" title="Menu de navigation">☰</button>
+            <button class="mobile-menu-btn" id="toggleLayersPanel" title="Afficher les couches et fonds de carte">⚙️</button>
         </nav>
 
         <!-- Mobile Panel Overlay -->
@@ -2433,25 +2483,34 @@
 
         // MOBILE RESPONSIVE PANEL CONTROLS
         document.addEventListener('DOMContentLoaded', function() {
-            const toggleLeftBtn = document.getElementById('toggleLeftPanel');
-            const toggleRightBtn = document.getElementById('toggleRightPanel');
+            const toggleNavMenuBtn = document.getElementById('toggleNavMenu');
+            const toggleLayersPanelBtn = document.getElementById('toggleLayersPanel');
             const leftPanel = document.querySelector('.panel-left');
             const rightPanel = document.querySelector('.panel-right');
+            const navbarMenu = document.getElementById('navbarMenu');
             const mobilePanelOverlay = document.getElementById('mobilePanelOverlay');
 
-            // Toggle left panel
-            if (toggleLeftBtn) {
-                toggleLeftBtn.addEventListener('click', function() {
-                    leftPanel.classList.toggle('mobile-open');
+            // Toggle Navigation Menu
+            if (toggleNavMenuBtn) {
+                toggleNavMenuBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    navbarMenu.classList.toggle('mobile-open');
+                    leftPanel.classList.add('mobile-open');
                     rightPanel.classList.remove('mobile-open');
-                    mobilePanelOverlay.classList.toggle('show');
+                    if (navbarMenu.classList.contains('mobile-open')) {
+                        mobilePanelOverlay.classList.add('show');
+                    } else if (!leftPanel.classList.contains('mobile-open')) {
+                        mobilePanelOverlay.classList.remove('show');
+                    }
                 });
             }
 
-            // Toggle right panel
-            if (toggleRightBtn) {
-                toggleRightBtn.addEventListener('click', function() {
+            // Toggle Layers Panel (right panel)
+            if (toggleLayersPanelBtn) {
+                toggleLayersPanelBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
                     rightPanel.classList.toggle('mobile-open');
+                    navbarMenu.classList.remove('mobile-open');
                     leftPanel.classList.remove('mobile-open');
                     mobilePanelOverlay.classList.toggle('show');
                 });
@@ -2460,27 +2519,45 @@
             // Close panels when overlay is clicked
             if (mobilePanelOverlay) {
                 mobilePanelOverlay.addEventListener('click', function() {
+                    navbarMenu.classList.remove('mobile-open');
                     leftPanel.classList.remove('mobile-open');
                     rightPanel.classList.remove('mobile-open');
                     mobilePanelOverlay.classList.remove('show');
                 });
             }
 
-            // Close panels when clicking outside on mobile
+            // Close panels/menu when clicking outside on mobile
             document.addEventListener('click', function(e) {
-                const isClickInsidePanel = leftPanel.contains(e.target) || rightPanel.contains(e.target);
-                const isClickOnButton = toggleLeftBtn.contains(e.target) || toggleRightBtn.contains(e.target);
+                const isClickInsideLeftPanel = leftPanel.contains(e.target);
+                const isClickInsideRightPanel = rightPanel.contains(e.target);
+                const isClickInsideNavbar = document.querySelector('.navbar').contains(e.target);
                 
-                if (!isClickInsidePanel && !isClickOnButton) {
+                if (!isClickInsideLeftPanel && !isClickInsideRightPanel && !isClickInsideNavbar) {
+                    navbarMenu.classList.remove('mobile-open');
                     leftPanel.classList.remove('mobile-open');
                     rightPanel.classList.remove('mobile-open');
                     mobilePanelOverlay.classList.remove('show');
                 }
             });
 
+            // Close menu/panels when clicking on a menu item
+            if (navbarMenu) {
+                const menuLinks = navbarMenu.querySelectorAll('a');
+                menuLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        navbarMenu.classList.remove('mobile-open');
+                        setTimeout(() => {
+                            leftPanel.classList.remove('mobile-open');
+                            mobilePanelOverlay.classList.remove('show');
+                        }, 300);
+                    });
+                });
+            }
+
             // Handle window resize - close panels on larger screens
             window.addEventListener('resize', function() {
                 if (window.innerWidth > 768) {
+                    navbarMenu.classList.remove('mobile-open');
                     leftPanel.classList.remove('mobile-open');
                     rightPanel.classList.remove('mobile-open');
                     mobilePanelOverlay.classList.remove('show');
