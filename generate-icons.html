@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur d'Icônes PWA - GeoZiguinchor</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #2c3e50 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .info-box {
+            background: #ecf0f1;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        .info-box p {
+            color: #34495e;
+            line-height: 1.6;
+        }
+        .button-group {
+            display: grid;
+            gap: 10px;
+        }
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background: #27ae60;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #229954;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(39, 174, 96, 0.3);
+        }
+        .btn-secondary {
+            background: #3498db;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+        .sizes {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .size-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+        .size-item:last-child {
+            border-bottom: none;
+        }
+        .size-label {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .size-value {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        #preview {
+            text-align: center;
+            margin: 20px 0;
+        }
+        #preview img {
+            max-width: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+        }
+        .status.success {
+            background: #d5f4e6;
+            color: #27ae60;
+            display: block;
+        }
+        .status.error {
+            background: #fadbd8;
+            color: #e74c3c;
+            display: block;
+        }
+        .status.info {
+            background: #d6eaf8;
+            color: #3498db;
+            display: block;
+        }
+        .instructions {
+            background: #fef5e7;
+            border-left: 4px solid #f39c12;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        .instructions h3 {
+            color: #d68910;
+            margin-bottom: 10px;
+        }
+        .instructions ol {
+            margin-left: 20px;
+            color: #34495e;
+            line-height: 1.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Générateur d'Icônes PWA</h1>
+        <p class="subtitle">GeoZiguinchor - Application Cartographique</p>
+        
+        <div class="info-box">
+            <p>✓ Cet outil génère les icônes nécessaires pour installer votre application PWA sur Android et iOS.</p>
+        </div>
+        
+        <div class="sizes">
+            <div class="size-item">
+                <span class="size-label">Icônes générées:</span>
+                <span class="size-value">10 tailles différentes</span>
+            </div>
+            <div class="size-item">
+                <span class="size-label">Formats:</span>
+                <span class="size-value">PNG, 192x192, 512x512, etc.</span>
+            </div>
+            <div class="size-item">
+                <span class="size-label">Maskable:</span>
+                <span class="size-value">Android Adaptive Icons</span>
+            </div>
+        </div>
+        
+        <div id="preview"></div>
+        
+        <div class="button-group">
+            <button class="btn-primary" onclick="generateIcons()">
+                ✓ Générer les fichiers
+            </button>
+            <button class="btn-secondary" onclick="downloadPNGiOS()">
+                📱 Télécharger pour iOS
+            </button>
+        </div>
+        
+        <div id="status" class="status"></div>
+        
+        <div class="instructions">
+            <h3>📋 Instructions d'installation:</h3>
+            <ol>
+                <li>Cliquez sur "Générer les fichiers"</li>
+                <li>Les icônes seront créées dans le dossier <code>images/</code></li>
+                <li>La PWA sera installable sur votre appareil</li>
+                <li>Pour iOS: sur Safari, utilisez "Ajouter à l'écran d'accueil"</li>
+            </ol>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        const SIZES = [16, 32, 72, 96, 128, 144, 152, 180, 192, 384, 512];
+        let generatedCounter = 0;
+
+        async function generateIcons() {
+            try {
+                showStatus('Génération des icônes en cours...', 'info');
+                generatedCounter = 0;
+                
+                // Load SVG
+                const svgResponse = await fetch('./images/icon-base.svg');
+                const svgText = await svgResponse.text();
+                const svgBlob = new Blob([svgText], { type: 'image/svg+xml' });
+                const svgUrl = URL.createObjectURL(svgBlob);
+                
+                // Create canvas for conversion
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Generate regular icons
+                for (const size of SIZES) {
+                    await generateIcon(svgUrl, size, false);
+                }
+                
+                // Generate maskable icons (192 and 512)
+                const maskResponse = await fetch('./images/icon-maskable.svg');
+                const maskText = await maskResponse.text();
+                const maskBlob = new Blob([maskText], { type: 'image/svg+xml' });
+                const maskUrl = URL.createObjectURL(maskBlob);
+                
+                await generateIcon(maskUrl, 192, true);
+                await generateIcon(maskUrl, 512, true);
+                
+                showStatus(`✓ ${SIZES.length + 2} icônes générées avec succès!`, 'success');
+                console.log('Icônes disponibles dans: images/');
+                
+            } catch (error) {
+                showStatus(`✗ Erreur: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+
+        async function generateIcon(svgUrl, size, isMaskable) {
+            return new Promise((resolve) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    
+                    // Draw white background
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, size, size);
+                    
+                    // Draw SVG
+                    ctx.drawImage(img, 0, 0, size, size);
+                    
+                    // Convert to PNG and download
+                    const filename = isMaskable ? 
+                        `icon-maskable-${size}x${size}.png` : 
+                        `icon-${size}x${size}.png`;
+                    
+                    canvas.toBlob(function(blob) {
+                        downloadBlob(blob, filename);
+                        showStatus(`✓ ${filename} créée`, 'success');
+                        resolve();
+                    }, 'image/png');
+                };
+                
+                img.src = svgUrl;
+            });
+        }
+
+        function downloadBlob(blob, filename) {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function downloadPNGiOS() {
+            // For iOS, we need to use a different approach
+            alert('Pour iOS:\n\n1. Ouvrez cette page dans Safari\n2. Cliquez le bouton de partage\n3. Sélectionnez "Ajouter à l\'écran d\'accueil"\n\nLes icônes générées seront utilisées automatiquement.');
+        }
+
+        function showStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        // Show preview on load
+        window.addEventListener('load', async function() {
+            try {
+                const svgResponse = await fetch('./images/icon-base.svg');
+                const svgText = await svgResponse.text();
+                const img = document.createElement('img');
+                img.src = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgText);
+                document.getElementById('preview').appendChild(img);
+            } catch (error) {
+                console.warn('Aperçu non disponible:', error);
+            }
+        });
+    </script>
+</body>
+</html>

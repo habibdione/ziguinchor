@@ -1,18 +1,55 @@
 {
-  "name": "GeoZiguinchor - Application Cartographique",
+  "name": "GeoZiguinchor - Application Cartographique Interactive",
   "short_name": "GeoZiguinchor",
-  "description": "Application cartographique interactive de la région de Ziguinchor avec géolocalisation et accès offline",
-  "start_url": "/geoziguinchor/index.html",
-  "scope": "/geoziguinchor/",
+  "description": "Application cartographique interactive de la région de Ziguinchor avec géolocalisation, mesure de distances et accès offline complet",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#2c3e50",
   "background_color": "#ffffff",
-  "categories": ["maps", "navigation", "productivity"],
+  "categories": ["maps", "navigation", "productivity", "utilities"],
+  "prefer_related_applications": false,
   "icons": [
+    {
+      "src": "images/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any"
+    },
     {
       "src": "images/icon-192x192.png",
       "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "images/icon-384x384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
     },
@@ -39,20 +76,22 @@
     {
       "src": "images/screenshot-1.png",
       "sizes": "540x720",
-      "type": "image/png"
+      "type": "image/png",
+      "form_factor": "narrow"
     },
     {
       "src": "images/screenshot-2.png",
       "sizes": "540x720",
-      "type": "image/png"
+      "type": "image/png",
+      "form_factor": "narrow"
     }
   ],
   "shortcuts": [
     {
       "name": "Accueil",
       "short_name": "Accueil",
-      "description": "Aller à la page d'accueil",
-      "url": "/geoziguinchor/index.html?view=home",
+      "description": "Aller à la carte principale",
+      "url": "./index.html?view=home",
       "icons": [
         {
           "src": "images/icon-96x96.png",
@@ -62,9 +101,9 @@
     },
     {
       "name": "Ma Position",
-      "short_name": "Position",
-      "description": "Voir ma position actuelle",
-      "url": "/geoziguinchor/index.html?view=location",
+      "short_name": "Localiser",
+      "description": "Voir ma position actuelle sur la carte",
+      "url": "./index.html?view=location",
       "icons": [
         {
           "src": "images/icon-96x96.png",
@@ -72,6 +111,5 @@
         }
       ]
     }
-  ],
-  "prefer_related_applications": false
+  ]
 }

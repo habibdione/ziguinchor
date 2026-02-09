@@ -1,58 +1,74 @@
 // Service Worker for GeoZiguinchor PWA
-const CACHE_NAME = 'geoziguinchor-v1.0';
+// Version: 2.0.0
+const CACHE_VERSION = 'v2.0.0';
+const CACHE_NAME = `geoziguinchor-${CACHE_VERSION}`;
+const DATA_CACHE = `geoziguinchor-data-${CACHE_VERSION}`;
+const OFFLINE_PAGE = './index.html';
+
+// Core static assets to cache
 const STATIC_ASSETS = [
-    '/geoziguinchor/index.html',
-    '/geoziguinchor/css/app.css',
-    '/geoziguinchor/css/leaflet.css',
-    '/geoziguinchor/css/L.Control.Layers.Tree.css',
-    '/geoziguinchor/css/L.Control.Locate.min.css',
-    '/geoziguinchor/css/qgis2web.css',
-    '/geoziguinchor/css/fontawesome-all.min.css',
-    '/geoziguinchor/css/MarkerCluster.css',
-    '/geoziguinchor/css/MarkerCluster.Default.css',
-    '/geoziguinchor/css/leaflet.photon.css',
-    '/geoziguinchor/css/leaflet-measure.css',
-    '/geoziguinchor/js/app.js',
-    '/geoziguinchor/js/leaflet.js',
-    '/geoziguinchor/js/L.Control.Layers.Tree.min.js',
-    '/geoziguinchor/js/L.Control.Locate.min.js',
-    '/geoziguinchor/js/multi-style-layer.js',
-    '/geoziguinchor/js/leaflet-svg-shape-markers.min.js',
-    '/geoziguinchor/js/leaflet.rotatedMarker.js',
-    '/geoziguinchor/js/leaflet.pattern.js',
-    '/geoziguinchor/js/leaflet-hash.js',
-    '/geoziguinchor/js/Autolinker.min.js',
-    '/geoziguinchor/js/rbush.min.js',
-    '/geoziguinchor/js/labelgun.min.js',
-    '/geoziguinchor/js/labels.js',
-    '/geoziguinchor/js/leaflet.photon.js',
-    '/geoziguinchor/js/leaflet-measure.js',
-    '/geoziguinchor/js/leaflet.markercluster.js',
-    '/geoziguinchor/js/qgis2web_expressions.js',
-    '/geoziguinchor/manifest.json'
+    './',
+    './index.html',
+    './manifest.json',
+    './css/app.css',
+    './css/leaflet.css',
+    './css/L.Control.Layers.Tree.css',
+    './css/L.Control.Locate.min.css',
+    './css/qgis2web.css',
+    './css/fontawesome-all.min.css',
+    './css/MarkerCluster.css',
+    './css/MarkerCluster.Default.css',
+    './css/leaflet.photon.css',
+    './css/leaflet-measure.css',
+    './js/app.js',
+    './js/leaflet.js',
+    './js/L.Control.Layers.Tree.min.js',
+    './js/L.Control.Locate.min.js',
+    './js/multi-style-layer.js',
+    './js/leaflet-svg-shape-markers.min.js',
+    './js/leaflet.rotatedMarker.js',
+    './js/leaflet.pattern.js',
+    './js/leaflet-hash.js',
+    './js/Autolinker.min.js',
+    './js/rbush.min.js',
+    './js/labelgun.min.js',
+    './js/labels.js',
+    './js/leaflet.photon.js',
+    './js/leaflet-measure.js',
+    './js/leaflet.markercluster.js',
+    './js/qgis2web_expressions.js'
 ];
 
-// Install Service Worker
+// Install Service Worker - Cache essential assets
 self.addEventListener('install', (event) => {
-    console.log('Service Worker installing...');
+    console.log('GeoZiguinchor SW: Installing version', CACHE_VERSION);
     event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            console.log('Caching static assets');
-            return cache.addAll(STATIC_ASSETS);
-        })
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('GeoZiguinchor SW: Caching', STATIC_ASSETS.length, 'static assets');
+                // Cache with ignoreErrors to avoid failing on missing assets
+                return cache.addAll(STATIC_ASSETS).catch((error) => {
+                    console.warn('GeoZiguinchor SW: Some assets failed to cache:', error);
+                    // Continue even if some assets fail
+                    return Promise.resolve();
+                });
+            })
+            .catch((error) => {
+                console.error('GeoZiguinchor SW: Cache open failed:', error);
+            })
     );
     self.skipWaiting();
 });
 
-// Activate Service Worker
+// Activate Service Worker - Clean up old caches
 self.addEventListener('activate', (event) => {
-    console.log('Service Worker activating...');
+    console.log('GeoZiguinchor SW: Activating...');
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('Deleting old cache:', cacheName);
+                    if (!cacheName.includes(CACHE_VERSION)) {
+                        console.log('GeoZiguinchor SW: Deleting old cache:', cacheName);
                         return caches.delete(cacheName);
                     }
                 })
@@ -62,72 +78,124 @@ self.addEventListener('activate', (event) => {
     self.clients.claim();
 });
 
-// Fetch Event - Network First, Cache Fallback
+// Fetch Event - Intelligent caching strategy
 self.addEventListener('fetch', (event) => {
+    const { request } = event;
+    
     // Skip non-GET requests
-    if (event.request.method !== 'GET') {
+    if (request.method !== 'GET') {
         return;
     }
-
-    // Handle API requests (data)
-    if (event.request.url.includes('/data/')) {
-        event.respondWith(
-            fetch(event.request)
-                .then((response) => {
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, clone);
-                    });
-                    return response;
-                })
-                .catch(() => {
-                    return caches.match(event.request);
-                })
-        );
+    
+    const url = new URL(request.url);
+    
+    // Handle API/data requests (Network First, Cache Fallback)
+    if (url.pathname.includes('/data/') || url.pathname.includes('.js?')) {
+        event.respondWith(networkFirst(request));
         return;
     }
-
+    
+    // Handle images (Cache First, Network Fallback)
+    if (request.destination === 'image') {
+        event.respondWith(cacheFirst(request));
+        return;
+    }
+    
     // Handle static assets (Cache First)
-    event.respondWith(
-        caches.match(event.request).then((response) => {
-            if (response) {
-                return response;
-            }
-            return fetch(event.request)
-                .then((response) => {
-                    if (!response || response.status !== 200 || response.type !== 'basic') {
-                        return response;
-                    }
-                    const clone = response.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, clone);
-                    });
-                    return response;
-                })
-                .catch(() => {
-                    // Return offline page or cached fallback
-                    return caches.match('/geoziguinchor/index.html');
-                });
-        })
-    );
+    if (request.destination === 'style' || request.destination === 'script' || 
+        url.pathname.endsWith('.css') || url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.woff') || url.pathname.endsWith('.woff2') ||
+        url.pathname.endsWith('.ttf') || url.pathname.endsWith('.eot')) {
+        event.respondWith(cacheFirst(request));
+        return;
+    }
+    
+    // Default strategy for HTML and other (Network First)
+    event.respondWith(networkFirst(request));
 });
+
+// Cache First Strategy
+async function cacheFirst(request) {
+    const cached = await caches.match(request);
+    if (cached) {
+        return cached;
+    }
+    
+    try {
+        const response = await fetch(request);
+        if (response && response.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, response.clone());
+        }
+        return response;
+    } catch (error) {
+        console.warn('GeoZiguinchor SW: Fetch failed for', request.url, error);
+        return caches.match('./index.html');
+    }
+}
+
+// Network First Strategy
+async function networkFirst(request) {
+    try {
+        const response = await fetch(request);
+        if (response && response.status === 200) {
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(request, response.clone());
+        }
+        return response;
+    } catch (error) {
+        console.warn('GeoZiguinchor SW: Network request failed for', request.url);
+        const cached = await caches.match(request);
+        if (cached) {
+            return cached;
+        }
+        return caches.match('./index.html');
+    }
+}
 
 // Background Sync for offline actions
 self.addEventListener('sync', (event) => {
-    if (event.tag === 'sync-data') {
-        event.waitUntil(syncData());
+    console.log('GeoZiguinchor SW: Background sync event:', event.tag);
+    if (event.tag === 'sync-location-data') {
+        event.waitUntil(syncLocationData());
     }
 });
 
-// Sync data function
-function syncData() {
-    return Promise.resolve();
+async function syncLocationData() {
+    try {
+        // Placeholder for syncing location data when back online
+        console.log('GeoZiguinchor SW: Syncing location data...');
+        return Promise.resolve();
+    } catch (error) {
+        console.error('GeoZiguinchor SW: Sync failed:', error);
+        return Promise.reject(error);
+    }
 }
 
 // Handle messages from the client
 self.addEventListener('message', (event) => {
+    console.log('GeoZiguinchor SW: Message received:', event.data);
+    
     if (event.data && event.data.type === 'SKIP_WAITING') {
         self.skipWaiting();
+    }
+    
+    if (event.data && event.data.type === 'CLEAR_CACHE') {
+        event.waitUntil(
+            caches.delete(CACHE_NAME).then(() => {
+                event.ports[0].postMessage({ success: true });
+            })
+        );
+    }
+    
+    if (event.data && event.data.type === 'CACHE_URLS') {
+        event.waitUntil(
+            caches.open(CACHE_NAME).then((cache) => {
+                return cache.addAll(event.data.urls).then(() => {
+                    event.ports[0].postMessage({ cached: event.data.urls.length });
+                });
+            })
+        );
     }
 });
 
@@ -135,29 +203,36 @@ self.addEventListener('message', (event) => {
 self.addEventListener('push', (event) => {
     const data = event.data ? event.data.json() : {};
     const options = {
-        body: data.body || 'Nouvelle notification',
-        icon: '/geoziguinchor/images/icon-192x192.png',
-        badge: '/geoziguinchor/images/icon-96x96.png',
-        tag: 'geoziguinchor-notification'
+        body: data.body || 'Nouvelle notification GeoZiguinchor',
+        icon: './images/icon-192x192.png',
+        badge: './images/icon-96x96.png',
+        tag: 'geoziguinchor-notification',
+        requireInteraction: data.requireInteraction || false,
+        data: data.data || {}
     };
+    
     event.waitUntil(
         self.registration.showNotification(data.title || 'GeoZiguinchor', options)
     );
 });
 
-// Notification click
+// Notification click handler
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
     event.waitUntil(
         clients.matchAll({ type: 'window' }).then((clientList) => {
+            // Find existing window
             for (let client of clientList) {
-                if (client.url === '/geoziguinchor/index.html' && 'focus' in client) {
+                if (client.url === self.registration.scope && 'focus' in client) {
                     return client.focus();
                 }
             }
+            // Or open a new window
             if (clients.openWindow) {
-                return clients.openWindow('/geoziguinchor/index.html');
+                return clients.openWindow('./index.html');
             }
         })
     );
 });
+
+console.log('GeoZiguinchor Service Worker loaded');

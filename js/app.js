@@ -359,71 +359,226 @@ function updateCoordinatesAndScale() {
     document.getElementById('scaleInfo').textContent = scaleDisplay + ' / 100px';
 }
 
+// Geolocation tracking variables
+let locationTracking = false;
+let watchLocationId = null;
+let locationHistory = [];
+let accuracyCircle = null;
+
 // Setup geolocation
 function setupGeolocation() {
     const geolocateBtn = document.getElementById('geolocateBtn');
     
-    geolocateBtn.addEventListener('click', function() {
-        if ('geolocation' in navigator) {
-            showToast('Localisation en cours...', 'info');
-            
-            navigator.geolocation.getCurrentPosition(
-                function(position) {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    const accuracy = position.coords.accuracy;
-                    
-                    currentLocation = {lat, lng, accuracy};
-                    
-                    // Remove old marker if exists
-                    if (userMarker) {
-                        map.removeLayer(userMarker);
-                    }
-                    
-                    // Add new user marker
-                    userMarker = L.circleMarker([lat, lng], {
-                        radius: 8,
-                        fillColor: '#3498db',
-                        color: '#2980b9',
-                        weight: 2,
-                        opacity: 1,
-                        fillOpacity: 0.8
-                    }).addTo(map);
-                    
-                    // Add accuracy circle
-                    const accuracyCircle = L.circle([lat, lng], accuracy, {
-                        color: '#3498db',
-                        fillColor: '#3498db',
-                        fillOpacity: 0.1,
-                        weight: 2
-                    }).addTo(map);
-                    
-                    // Pan to location
-                    map.setView([lat, lng], 15);
-                    
-                    // Bind popup
-                    userMarker.bindPopup(`
-                        <strong>Ma position</strong><br>
-                        Latitude: ${lat.toFixed(6)}<br>
-                        Longitude: ${lng.toFixed(6)}<br>
-                        Précision: ±${accuracy.toFixed(0)}m
-                    `).openPopup();
-                    
-                    showToast('Position trouvée!', 'success');
-                },
-                function(error) {
-                    showToast('Impossible d\'accéder à votre position: ' + error.message, 'error');
-                },
-                {
-                    enableHighAccuracy: true,
-                    timeout: 5000,
-                    maximumAge: 0
+    // Load location history from localStorage
+    loadLocationHistory();
+    
+    if (geolocateBtn) {
+        geolocateBtn.addEventListener('click', function() {
+            if ('geolocation' in navigator) {
+                if (!locationTracking) {
+                    startLocationTracking();
+                    geolocateBtn.textContent = '📍 Arrêter le suivi';
+                    geolocateBtn.style.background = '#e74c3c';
+                } else {
+                    stopLocationTracking();
+                    geolocateBtn.textContent = '📍 Ma position';
+                    geolocateBtn.style.background = '';
                 }
-            );
-        } else {
-            showToast('La géolocalisation n\'est pas disponible', 'error');
+            } else {
+                showToast('La géolocalisation n\'est pas disponible sur cet appareil', 'error');
+            }
+        });
+    }
+}
+
+// Start continuous location tracking
+function startLocationTracking() {
+    locationTracking = true;
+    showToast('Localisation en cours...', 'info');
+    
+    // Get position once immediately
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            updateLocationOnMap(position);
+        },
+        function(error) {
+            showToast('Erreur de géolocalisation: ' + error.message, 'error');
+            locationTracking = false;
         }
+    );
+    
+    // Start watching position continuously
+    watchLocationId = navigator.geolocation.watchPosition(
+        function(position) {
+            updateLocationOnMap(position);
+        },
+        function(error) {
+            console.warn('Erreur de géolocalisation:', error.message);
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 5000
+        }
+    );
+}
+
+// Stop location tracking
+function stopLocationTracking() {
+    locationTracking = false;
+    if (watchLocationId !== null) {
+        navigator.geolocation.clearWatch(watchLocationId);
+        watchLocationId = null;
+    }
+    showToast('Suivi arrêté', 'info');
+}
+
+// Update location on map
+function updateLocationOnMap(position) {
+    const lat = position.coords.latitude;
+    const lng = position.coords.longitude;
+    const accuracy = position.coords.accuracy;
+    const timestamp = new Date();
+    
+    currentLocation = {lat, lng, accuracy, timestamp};
+    
+    // Save to history
+    saveLocationToHistory(currentLocation);
+    
+    // Remove old marker if exists
+    if (userMarker) {
+        map.removeLayer(userMarker);
+    }
+    
+    // Remove old accuracy circle
+    if (accuracyCircle) {
+        map.removeLayer(accuracyCircle);
+    }
+    
+    // Add new user marker
+    userMarker = L.circleMarker([lat, lng], {
+        radius: 8,
+        fillColor: '#3498db',
+        color: '#2980b9',
+        weight: 2,
+        opacity: 1,
+        fillOpacity: 0.8
+    }).addTo(map);
+    
+    // Add accuracy circle
+    accuracyCircle = L.circle([lat, lng], accuracy, {
+        color: '#3498db',
+        fillColor: '#3498db',
+        fillOpacity: 0.1,
+        weight: 2,
+        dashArray: '5, 5'
+    }).addTo(map);
+    
+    // Pan to location only on first location
+    if (map.getZoom() < 13) {
+        map.setView([lat, lng], 15);
+    }
+    
+    // Bind popup with more information
+    userMarker.bindPopup(`
+        <div style="font-family: Arial; font-size: 12px;">
+            <strong style="color: #2c3e50;">📍 Ma position</strong><br>
+            <hr style="margin: 5px 0;">
+            <b>Latitude:</b> ${lat.toFixed(6)}°<br>
+            <b>Longitude:</b> ${lng.toFixed(6)}°<br>
+            <b>Précision:</b> ±${accuracy.toFixed(0)}m<br>
+            <b>Heure:</b> ${timestamp.toLocaleTimeString('fr-FR')}<br>
+            <button onclick="copyCoordinates(${lat}, ${lng})" style="margin-top: 8px; padding: 5px 10px; background: #3498db; color: white; border: none; border-radius: 3px; cursor: pointer; font-size: 11px;">📋 Copier coord.</button>
+        </div>
+    `).openPopup();
+    
+    showToast(`Position mise à jour (±${accuracy.toFixed(0)}m)`, 'success');
+}
+
+// Save location to history
+function saveLocationToHistory(location) {
+    locationHistory.push(location);
+    
+    // Keep only last 100 locations
+    if (locationHistory.length > 100) {
+        locationHistory.shift();
+    }
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('geoziguinchor_location_history', JSON.stringify(locationHistory));
+        localStorage.setItem('geoziguinchor_last_location', JSON.stringify(location));
+    } catch (error) {
+        console.warn('Impossible de sauvegarder l\'historique des positions:', error);
+    }
+}
+
+// Load location history from localStorage
+function loadLocationHistory() {
+    try {
+        const saved = localStorage.getItem('geoziguinchor_location_history');
+        if (saved) {
+            locationHistory = JSON.parse(saved);
+            console.log('Historique de positions chargé:', locationHistory.length, 'entrées');
+        }
+    } catch (error) {
+        console.warn('Impossible de charger l\'historique des positions:', error);
+    }
+}
+
+// Copy coordinates to clipboard
+function copyCoordinates(lat, lng) {
+    const text = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+    navigator.clipboard.writeText(text).then(function() {
+        showToast('Coordonnées copiées: ' + text, 'success');
+    }).catch(function(error) {
+        console.error('Erreur lors de la copie:', error);
     });
+}
+
+// Export location history as GeoJSON
+function exportLocationHistoryAsGeoJSON() {
+    const features = locationHistory.map((loc, index) => ({
+        type: 'Feature',
+        properties: {
+            index: index,
+            accuracy: loc.accuracy,
+            timestamp: loc.timestamp
+        },
+        geometry: {
+            type: 'Point',
+            coordinates: [loc.lng, loc.lat]
+        }
+    }));
+    
+    const geojson = {
+        type: 'FeatureCollection',
+        features: features
+    };
+    
+    const dataStr = JSON.stringify(geojson, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `locations-${new Date().toISOString()}.geojson`;
+    link.click();
+    URL.revokeObjectURL(url);
+    showToast('Historique exporté en GeoJSON', 'success');
+}
+
+// Clear location history
+function clearLocationHistory() {
+    if (confirm('Êtes-vous sûr de vouloir effacer l\'historique de positions?')) {
+        locationHistory = [];
+        try {
+            localStorage.removeItem('geoziguinchor_location_history');
+            localStorage.removeItem('geoziguinchor_last_location');
+        } catch (error) {
+            console.warn('Erreur lors de l\'effacement:', error);
+        }
+        showToast('Historique effacé', 'success');
+    }
 }
 
 // Setup event listeners

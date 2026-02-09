@@ -6,6 +6,23 @@
         <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+        <meta name="apple-mobile-web-app-title" content="GeoZiguinchor">
+        <meta name="theme-color" content="#2c3e50">
+        <meta name="description" content="Application cartographique interactive de Ziguinchor avec géolocalisation et accès offline">
+        <meta name="keywords" content="carte, cartographie, Ziguinchor, Sénégal, géolocalisation, PWA">
+        <meta name="author" content="GeoZiguinchor Team">
+        
+        <!-- PWA Manifest -->
+        <link rel="manifest" href="./manifest.json">
+        
+        <!-- Apple Web App Icons -->
+        <link rel="apple-touch-icon" href="./images/icon-180x180.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="./images/icon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="./images/icon-16x16.png">
+        <link rel="icon" type="image/png" sizes="192x192" href="./images/icon-192x192.png">
+        
+        <!-- Stylesheets -->
         <link rel="stylesheet" href="css/leaflet.css">
         <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
         <link rel="stylesheet" href="css/L.Control.Locate.min.css">
@@ -2162,6 +2179,78 @@
         map.on("layerremove", function(){
             resetLabels([layer_Departement_4,layer_Arrondissement_5]);
         });
+        </script>
+        
+        <!-- Service Worker Registration -->
+        <script>
+        // Register Service Worker for PWA functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js', { scope: './' })
+                    .then(function(registration) {
+                        console.log('✓ Service Worker registered successfully:', registration);
+                        
+                        // Check for updates periodically
+                        setInterval(function() {
+                            registration.update();
+                        }, 60000); // Check every 60 seconds
+                        
+                        // Handle new service worker waiting
+                        registration.addEventListener('updatefound', function() {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', function() {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New service worker is ready
+                                    console.log('New version available! Refreshing...');
+                                    showUpdateNotification();
+                                }
+                            });
+                        });
+                    })
+                    .catch(function(error) {
+                        console.error('✗ Service Worker registration failed:', error);
+                    });
+                
+                // Check if app is installable
+                window.addEventListener('beforeinstallprompt', function(e) {
+                    e.preventDefault();
+                    console.log('App is installable on this device');
+                    deferredPrompt = e;
+                });
+            });
+        }
+        
+        // Show update notification
+        function showUpdateNotification() {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('GeoZiguinchor', {
+                    body: 'Une nouvelle version est disponible. Rafraîchissez la page.',
+                    icon: './images/icon-192x192.png',
+                    tag: 'geoziguinchor-update'
+                });
+            }
+        }
+        
+        // Request notification permission
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        
+        // Handle app installation
+        let deferredPrompt;
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('App installation accepted');
+                    } else {
+                        console.log('App installation dismissed');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        }
         </script>
     </body>
 </html>
